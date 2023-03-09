@@ -1,7 +1,6 @@
 export ARCH:=arm
-export CROSS_COMPILE:=$(HOME)/arm-cross-comp-env/arm-raspbian-linux-gnueabihf/bin/arm-linux-gnueabihf-
+export CROSS_COMPILE:=$(HOME)/arm-cross-comp-env/arm-raspbian-linux-gnueabi/bin/arm-linux-gnueabihf-
 # path du kernel utilisé au lab1 (possiblement différent pour installation custom)
-# http://vision.gel.ulaval.ca/~cgagne/enseignement/SETR/H2019/labo1.html#compilation-et-installation-de-la-cha%C3%AEne-de-compilation
 export KERNEL_SRC:=$(HOME)/rPi/linux-rpi-4.19.y-rt
 
 obj-m += setr_driver_polling.o setr_driver_irq.o

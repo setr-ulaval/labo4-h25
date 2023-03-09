@@ -1,5 +1,5 @@
 /******************************************************************************
-* H2020
+* H2023
 * LABORATOIRE 4, Systèmes embarqués et temps réel
 * Ébauche de code pour le pilote utilisant les interruptions
 * Marc-André Gardner, mars 2019
@@ -270,4 +270,4 @@ module_exit(setrclavier_exit);
 MODULE_LICENSE("GPL");            // Licence : laissez "GPL"
 MODULE_AUTHOR("Vous!");           // Vos noms
 MODULE_DESCRIPTION("Lecteur de clavier externe, avec interruptions");  // Description du module
-MODULE_VERSION("0.2");            // Numéro de version
+MODULE_VERSION("0.3");            // Numéro de version
