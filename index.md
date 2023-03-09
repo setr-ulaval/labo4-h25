@@ -33,7 +33,7 @@ Comme vous pouvez le constater, toutes les broches ne sont pas équivalentes. Ce
 
 ## 3. Préparation et outils nécessaires (logiciels)
 
-Les ébauches de code sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h22](https://github.com/setr-ulaval/labo4-h22). Vous y retrouvez, comme pour les autres laboratoires, un projet VScode et deux fichiers source correspondant aux deux pilotes que vous devrez implémenter. Notez que la configuration qui vous est fournie assume que vous avez bâti votre environnement de compilation croisée en suivant à la lettre les instructions du laboratoire 1. Si vous obtenez des erreurs liées à des en-têtes manquants, vérifiez que vous avez bien utilisé les sources du noyau correspondant à la version présente sur le Raspberry Pi. Pour cette même raison, vous ne devez *pas* avoir mis à jour le noyau installé sur votre Raspberry Pi.
+Les ébauches de code sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h23](https://github.com/setr-ulaval/labo4-h23). Vous y retrouvez, comme pour les autres laboratoires, un projet VScode et deux fichiers source correspondant aux deux pilotes que vous devrez implémenter. Notez que la configuration qui vous est fournie assume que vous avez bâti votre environnement de compilation croisée en suivant à la lettre les instructions du laboratoire 1. Si vous obtenez des erreurs liées à des en-têtes manquants, vérifiez que vous avez bien utilisé les sources du noyau correspondant à la version présente sur le Raspberry Pi. Pour cette même raison, vous ne devez *pas* avoir mis à jour le noyau installé sur votre Raspberry Pi.
 
 La compilation et l'édition de liens d'un module noyau constituent probablement une des tâches les plus délicates pour un environnement de compilation croisée. Pour cette raison, le noyau Linux possède son propre système de compilation, basé sur *Make*; nous n'utiliserons donc pas CMake dans le cadre de ce laboratoire.
 
@@ -59,7 +59,7 @@ Notez que comme l'exécution d'un module noyau se fait logiquement en mode privi
 
 ## 4. Énoncé
 
-Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h22](https://github.com/setr-ulaval/labo4-h22).
+Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h23](https://github.com/setr-ulaval/labo4-h23).
 
 ### 4.1. Méthode de lecture du clavier
 
@@ -132,17 +132,15 @@ Le laboratoire comporte deux livrables :
 1. Module du pilote effectuant une lecture du clavier par « pooling » (fichier *setr_driver_polling.c*);
 2. Module du pilote effectuant une lecture du clavier par interruption (fichier *setr_driver_irq.c*).
 
-Ce travail doit être réalisé **en équipe de deux**, la charge de travail étant à répartir équitablement entre les deux membres de l'équipe. Aucun rapport n'est à remettre, mais vous devez soumettre votre code source et une vidéo de démonstration dans monPortail avant le **7 avril 2022, 9h30**. Ensuite, lors de la séance de laboratoire du **8 avril 2022**, les deux équipiers doivent être en mesure individuellement d'expliquer leur approche et de démontrer le bon fonctionnement de l'ensemble de la solution de l'équipe du laboratoire. Si vous ne pouvez pas vous y présenter, contactez l'équipe pédagogique du cours dans les plus brefs délais afin de convenir d'une date d'évaluation alternative. Ce travail compte pour **15%** de la note totale du cours. Comme pour les travaux précédents, votre code doit compiler **sans avertissements** de la part de GCC.
+Ce travail doit être réalisé **en équipe de deux**, la charge de travail étant à répartir équitablement entre les deux membres de l'équipe. Aucun rapport n'est à remettre, mais vous devez soumettre votre code source dans monPortail avant le **30 mars 2023, 21h30**. Ensuite, lors de la séance de laboratoire du **31 mars 2023**, les deux équipiers doivent être en mesure individuellement d'expliquer leur approche et de démontrer le bon fonctionnement de l'ensemble de la solution de l'équipe du laboratoire. Si vous ne pouvez pas vous y présenter, contactez l'équipe pédagogique du cours dans les plus brefs délais afin de convenir d'une date d'évaluation alternative. Ce travail compte pour **15%** de la note totale du cours. Comme pour les travaux précédents, votre code doit compiler **sans avertissements** de la part de GCC.
 
-La démonstration vidéo devra comprendre les éléments suivants:
+Notre évaluation comprendra notamment les éléments suivants:
   1. L'exécution de la tâche de compilation avec sa sortie bien visible suivie de l'exécution de synchronisation;
   2. Vous pourrez ensuite ouvrir deux terminaux côte à côte connectés en ssh à la Raspberry Pi, de la même façon que le laboratoire 2:
       - Dans le premier, lancez l'unique commande `watch -n 1 uptime` pour monitorer l'utilisation CPU au cours des différents tests ci-après;
       - Dans le second, chargez le driver utilisant la méthode _polling_, puis lancez la commande `sudo tail -f /dev/claviersetr ---disable-inotify`. Vous pouvez ensuite appuyer sur toutes les touches une à une de gauche à droite et du haut vers le bas (c'est-à-dire 1, 2, 3, ...). Vous devrez ensuite effectuer les combinaisons de touches 13, 45, 89, *4, #3, 19 et 8# suivies d'un appui de plusieurs secondes sur la touche * ;
       - Pour finir, toujours dans le même terminal, déchargez le driver précedent pour charger le driver reposant sur la méthode des interruptions et effectuer à nouveaux les appuis demandés ci-dessus.
 
-
-Comme pour le laboratoire 3, on va vous demander de filmer avec une caméra et non d'enregistrer l'écran pour vérifier les saisies au clavier, aussi vous devrez cadrer en même temps l'écran et le clavier (les sorties des terminaux étant courtes vous pouvez réduire leur taille et placer le clavier devant l'écran en vous assurant que le tout soit correctment lisible).
 
 Ce travail compte pour **15%** de la note totale du cours.
 
@@ -160,7 +158,7 @@ Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 po
 
 ## 6. Ressources et lectures connexes
 
-* [Le dépôt Git contenant les fichiers de base](https://github.com/setr-ulaval/labo4-h22)
+* [Le dépôt Git contenant les fichiers de base](https://github.com/setr-ulaval/labo4-h23)
 * [Linux Device Drivers, Third Edition](https://lwn.net/Kernel/LDD3/), un excellent guide (bien que pas totalement à jour) sur l'écriture de pilotes pour le noyau Linux
 * [Documentation des fonctions d'accès aux GPIO](https://www.kernel.org/doc/Documentation/gpio/gpio-legacy.txt) dans le noyau Linux
 * [Un excellent guide sur l'écriture d'un pilote pour GPIO sous Linux](http://derekmolloy.ie/writing-a-linux-kernel-module-part-1-introduction/), duquel est en partie inspiré ce laboratoire
