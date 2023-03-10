@@ -103,7 +103,7 @@ static int dureeDebounce = 50;
 
 
 
-void func_tasklet_polling(unsigned long param){
+void func_tasklet_polling(unsigned long paramf){
     // Cette fonction est le coeur d'exécution du tasklet
     // Elle fait à peu de choses près la même chose que le kthread
     // dans le pilote que vous avez précédemment écrit (par polling),

@@ -12,6 +12,7 @@ Ce travail pratique vise les objectifs suivants :
 4. Se familiariser avec les classes de dispositifs de caractères et à l'utilisation du sous-système de fichier /dev;
 5. Apprendre à utiliser judicieusement les interruptions dans un système embarqué.
 
+> **IMPORTANT : l'archive des sources Linux téléchargée lors du laboratoire 1 est incomplète. Lisez et effectuez les actions de la section 3.1 _avant toute chose_.**
 
 ## 2. Préparation et outils nécessaires (matériel)
 
@@ -39,6 +40,8 @@ La compilation et l'édition de liens d'un module noyau constituent probablement
 
 ### 3.1. Téléchargement du noyau
 Compiler un module noyau requiert d'avoir une version compilé du noyau sur votre machine hôte. Vous pouvez télécharger l'archive [suivante](http://wcours.gel.ulaval.ca/2020/h/GIF3004/default/linux-rpi-4.19.y-rt.2.tar.gz) dans le dossier `$HOME/rPi` de la VM ou de votre ordinateur. Assurez vous de retirer le dossier `linux-rpi-4.19.y-rt` s'il est présent avant de décompressé l'archive. Si vous souhaitez installer le noyau dans un autre dossier, assurez vous de modifier la ligne 5 du `Makefile` du projet avec votre propre chemin.
+
+> Note : il se peut que la colorisation syntaxique indique des erreurs dans la directive _include_ de linux/kthread.h. Ce n'est pas un problème tant que vous pouvez tout de même compiler vos programmes sans erreur ni avertissement.
 
 ### 3.2. Procédure de compilation
 
