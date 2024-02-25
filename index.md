@@ -18,7 +18,7 @@ Ce travail pratique vise les objectifs suivants :
 
 Ce laboratoire est quelque peu différent des précédents, puisque vous devrez utiliser du matériel supplémentaire, en l'occurrence le petit clavier externe à 12 ou 16 touches que vous avez déjà utilisé dans le cours *Systèmes microprocesseur et interfaces*. Pour ceux n'ayant pas suivi le cours *Systèmes microprocesseur et interfaces*, vous pouvez vous procurer le clavier au magasin de département de génie électrique et de génie informatique. Pensez aussi à avoir le filage (ex. jumpers) pour faire la connexion aux RPi.
 
-> Note : selon les arrivages, le clavier peut avoir soit trois, soit quatre colonnes. L'un ou l'autre des modèles est valable pour ce laboratoire, mais assurez-vous de configurer correctement votre code lorsque demandé.
+> Note : selon les arrivages, le clavier peut avoir soit trois, soit quatre colonnes. L'un ou l'autre des modèles est valable pour ce laboratoire, mais assurez-vous de configurer correctement votre code lorsque demandé, en particulier dans la macro `NOMBRE_COLONNES` définie au début de chaque fichier.
 
 Ce clavier est très rudimentaire et vous devrez concevoir la logique nécessaire à sa lecture. Il possède *sept* fils d'entrée/sortie : 4 connexions pour les lignes (terminaisons noires) et 3 ou 4 pour les colonnes (terminaisons blanches). Ces sorties seront connectées aux *GPIO* (*General Purpose Input-Output*) de votre Raspberry Pi Zero. Ce dernier possède 40 points (pins) de connexion, agencés selon le schéma suivant (source : [element14](https://www.element14.com/community/docs/DOC-73950/l/raspberry-pi-3-model-b-gpio-40-pin-block-pinout)) :
 
