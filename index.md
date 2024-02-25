@@ -16,9 +16,11 @@ Ce travail pratique vise les objectifs suivants :
 
 ## 2. Préparation et outils nécessaires (matériel)
 
-Ce laboratoire est quelque peu différent des précédents, puisque vous devrez utiliser du matériel supplémentaire, en l'occurrence le petit clavier externe à 16 touches que vous avez déjà utilisé dans le cours *Systèmes microprocesseur et interfaces*. Pour ceux n'ayant pas suivi le cours *Systèmes microprocesseur et interfaces*, vous pouvez vous procurer le claviers au magasin de département de génie électrique et de génie informatique. Pensez aussi à avoir le filage (ex. jumpers) pour faire la connexion aux RPi.
+Ce laboratoire est quelque peu différent des précédents, puisque vous devrez utiliser du matériel supplémentaire, en l'occurrence le petit clavier externe à 12 ou 16 touches que vous avez déjà utilisé dans le cours *Systèmes microprocesseur et interfaces*. Pour ceux n'ayant pas suivi le cours *Systèmes microprocesseur et interfaces*, vous pouvez vous procurer le clavier au magasin de département de génie électrique et de génie informatique. Pensez aussi à avoir le filage (ex. jumpers) pour faire la connexion aux RPi.
 
-Ce clavier est très rudimentaire et vous devrez concevoir la logique nécessaire à sa lecture. Il possède *huit* fils d'entrée/sortie : 4 connexions pour les lignes et 4 pour les colonnes. Ces sorties seront connectées aux *GPIO* (*General Purpose Input-Output*) de votre Raspberry Pi Zero. Ce dernier possède 40 points (pins) de connexion, agencés selon le schéma suivant (source : [element14](https://www.element14.com/community/docs/DOC-73950/l/raspberry-pi-3-model-b-gpio-40-pin-block-pinout)) :
+> Note : selon les arrivages, le clavier peut avoir soit trois, soit quatre colonnes. L'un ou l'autre des modèles est valable pour ce laboratoire, mais assurez-vous de configurer correctement votre code lorsque demandé.
+
+Ce clavier est très rudimentaire et vous devrez concevoir la logique nécessaire à sa lecture. Il possède *sept* fils d'entrée/sortie : 4 connexions pour les lignes (terminaisons noires) et 3 ou 4 pour les colonnes (terminaisons blanches). Ces sorties seront connectées aux *GPIO* (*General Purpose Input-Output*) de votre Raspberry Pi Zero. Ce dernier possède 40 points (pins) de connexion, agencés selon le schéma suivant (source : [element14](https://www.element14.com/community/docs/DOC-73950/l/raspberry-pi-3-model-b-gpio-40-pin-block-pinout)) :
 
 <img src="img/header_pinout.jpg" style="width:500px"/> <img src="img/fils_clavier_crop.jpg" style="width:220px"/>
 
@@ -28,18 +30,18 @@ Vous observerez que sur votre Raspberry Pi Zero, une seule de ces broches possè
 
 Vous devriez avoir des connecteurs déjà soudés sur les broches de votre Raspberry Pi. Si ce n'est pas le cas, vous pouvez le faire faire au service technique pour une somme modique.
 
-Comme vous pouvez le constater, toutes les broches ne sont pas équivalentes. Certaines peuvent cumuler plusieurs fonctions alors que d'autres sont simplement des références pour la masse (Ground) ou des sources de tension. Dans le cadre de ce laboratoire, nous vous suggérons de brancher les *lignes* du clavier (qui seront écrites par le Raspberry Pi) sur les broches 29, 31, 33 et 35. De même, les *colonnes* du clavier (qui seront lues) devraient être branchées aux broches 32, 36, 38 et 40. D'autres configurations peuvent fonctionner et vous êtes libre de les utiliser, mais celle que nous vous proposons fonctionne à coup sûr. Si vous utilisez le clavier à 16 touches du cours de SMI, le schéma présenté ci-dessus, à droite, peut vous aider à vous repérer. Dans ce schéma, les fils sont numérotés de gauche à droite. Le fil **1** est connecté à la première *ligne* (la plus haute) du clavier, le **2** à la seconde, et ainsi de suite. Le fil **5** est connecté à la première *colonne* (celle de *gauche*) du clavier, le fil **6** à la seconde et ainsi de suite.
+Comme vous pouvez le constater, toutes les broches ne sont pas équivalentes. Certaines peuvent cumuler plusieurs fonctions alors que d'autres sont simplement des références pour la masse (Ground) ou des sources de tension. Dans le cadre de ce laboratoire, nous vous suggérons de brancher les *lignes* du clavier (qui seront écrites par le Raspberry Pi) sur les broches 29, 31, 33 et 35. De même, les *colonnes* du clavier (qui seront lues) devraient être branchées aux broches 32, 36 et 38. Si vous avez un clavier à 4 colonnes, utilisez également la broche 40. D'autres configurations peuvent fonctionner et vous êtes libre de les utiliser, mais celle que nous vous proposons fonctionne à coup sûr. Si vous utilisez le clavier à 12 ou 16 touches du cours de SMI, le schéma présenté ci-dessus, à droite, peut vous aider à vous repérer. Dans ce schéma, les fils sont numérotés de gauche à droite. Le fil **1** est connecté à la première *ligne* (la plus haute) du clavier, le **2** à la seconde, et ainsi de suite. Le fil **5** est connecté à la première *colonne* (celle de *gauche*) du clavier, le fil **6** à la seconde et ainsi de suite.
 
 **Attention lors des connexions** : les broches de sortie du Raspberry Pi sont des interfaces très rudimentaires et, en particulier, elles ne possèdent pas vraiment de systèmes de protection en cas de mauvais branchement. Brancher par exemple une ligne sous tension à une broche reliée à masse (*ground*) court-circuitera à coup sûr votre Raspberry Pi! Assurez-vous toujours que vos branchements sont corrects et qu'il n'y a pas de faux contacts avant de mettre l'ordinateur sous tension! Par ailleurs, nous vous *recommandons fortement* de ne pas changer les connexions alors que le Raspberry Pi est sous tension!
 
 ## 3. Préparation et outils nécessaires (logiciels)
 
-Les ébauches de code sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h23](https://github.com/setr-ulaval/labo4-h23). Vous y retrouvez, comme pour les autres laboratoires, un projet VScode et deux fichiers source correspondant aux deux pilotes que vous devrez implémenter. Notez que la configuration qui vous est fournie assume que vous avez bâti votre environnement de compilation croisée en suivant à la lettre les instructions du laboratoire 1. Si vous obtenez des erreurs liées à des en-têtes manquants, vérifiez que vous avez bien utilisé les sources du noyau correspondant à la version présente sur le Raspberry Pi. Pour cette même raison, vous ne devez *pas* avoir mis à jour le noyau installé sur votre Raspberry Pi.
+Les ébauches de code sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h24](https://github.com/setr-ulaval/labo4-h24). Vous y retrouvez, comme pour les autres laboratoires, un projet VScode et deux fichiers source correspondant aux deux pilotes que vous devrez implémenter. Notez que la configuration qui vous est fournie assume que vous avez bâti votre environnement de compilation croisée en suivant à la lettre les instructions du laboratoire 1. Si vous obtenez des erreurs liées à des en-têtes manquants, vérifiez que vous avez bien utilisé les sources du noyau correspondant à la version présente sur le Raspberry Pi. Pour cette même raison, vous ne devez *pas* avoir mis à jour le noyau installé sur votre Raspberry Pi.
 
 La compilation et l'édition de liens d'un module noyau constituent probablement une des tâches les plus délicates pour un environnement de compilation croisée. Pour cette raison, le noyau Linux possède son propre système de compilation, basé sur *Make*; nous n'utiliserons donc pas CMake dans le cadre de ce laboratoire.
 
 ### 3.1. Téléchargement du noyau
-Compiler un module noyau requiert d'avoir une version compilé du noyau sur votre machine hôte. Vous pouvez télécharger l'archive [suivante](http://wcours.gel.ulaval.ca/2020/h/GIF3004/default/linux-rpi-4.19.y-rt.2.tar.gz) dans le dossier `$HOME/rPi` de la VM ou de votre ordinateur. Assurez vous de retirer le dossier `linux-rpi-4.19.y-rt` s'il est présent avant de décompressé l'archive. Si vous souhaitez installer le noyau dans un autre dossier, assurez vous de modifier la ligne 5 du `Makefile` du projet avec votre propre chemin.
+Compiler un module noyau requiert d'avoir une version compilée du noyau sur votre machine hôte. Vous pouvez télécharger l'archive [suivante](http://wcours.gel.ulaval.ca/GIF3004/setrh24/linux-rpi-6.1.54-rt15.compiled.tar.gz) dans le dossier `$HOME/rPi` de la VM ou de votre ordinateur. Pour que le laboratoire fonctionne, le chemin suivant doit contenir les fichiers : `$HOME/rPi/linux-rpi-6.1.54-rt15.compiled/linux-rpi-6.1.54-rt15`. Si vous souhaitez installer le noyau dans un autre dossier, assurez vous de modifier la ligne 5 du `Makefile` du projet avec votre propre chemin.
 
 > Note : il se peut que la colorisation syntaxique indique des erreurs dans la directive _include_ de linux/kthread.h. Ce n'est pas un problème tant que vous pouvez tout de même compiler vos programmes sans erreur ni avertissement.
 
@@ -62,7 +64,7 @@ Notez que comme l'exécution d'un module noyau se fait logiquement en mode privi
 
 ## 4. Énoncé
 
-Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h23](https://github.com/setr-ulaval/labo4-h23).
+Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h24](https://github.com/setr-ulaval/labo4-h24).
 
 ### 4.1. Méthode de lecture du clavier
 
@@ -128,6 +130,8 @@ sudo tail -f /dev/claviersetr ---disable-inotify
 
 Cette commande lit votre pseudo-fichier à intervalle régulier (à chaque seconde par défaut) et afficher les nouveaux caractères au fur et à mesure. Notez que le paramètre *disable-inotify* doit bel et bien être précédé de *trois* tirets!
 
+> Note : contrairement aux laboratoires 2 et 3, nous ne fournissons pas de solutionnaire puisqu'il n'y a pas de dépendances entre les modules demandés.
+
 ## 5. Modalités d'évaluation
 
 Le laboratoire comporte deux livrables :
@@ -135,33 +139,49 @@ Le laboratoire comporte deux livrables :
 1. Module du pilote effectuant une lecture du clavier par « pooling » (fichier *setr_driver_polling.c*);
 2. Module du pilote effectuant une lecture du clavier par interruption (fichier *setr_driver_irq.c*).
 
-Ce travail doit être réalisé **en équipe de deux**, la charge de travail étant à répartir équitablement entre les deux membres de l'équipe. Aucun rapport n'est à remettre, mais vous devez soumettre votre code source dans monPortail avant le **30 mars 2023, 21h30**. Ensuite, lors de la séance de laboratoire du **31 mars 2023**, les deux équipiers doivent être en mesure individuellement d'expliquer leur approche et de démontrer le bon fonctionnement de l'ensemble de la solution de l'équipe du laboratoire. Si vous ne pouvez pas vous y présenter, contactez l'équipe pédagogique du cours dans les plus brefs délais afin de convenir d'une date d'évaluation alternative. Ce travail compte pour **15%** de la note totale du cours. Comme pour les travaux précédents, votre code doit compiler **sans avertissements** de la part de GCC.
-
-Notre évaluation comprendra notamment les éléments suivants:
-  1. L'exécution de la tâche de compilation avec sa sortie bien visible suivie de l'exécution de synchronisation;
-  2. Vous pourrez ensuite ouvrir deux terminaux côte à côte connectés en ssh à la Raspberry Pi, de la même façon que le laboratoire 2:
-      - Dans le premier, lancez l'unique commande `watch -n 1 uptime` pour monitorer l'utilisation CPU au cours des différents tests ci-après;
-      - Dans le second, chargez le driver utilisant la méthode _polling_, puis lancez la commande `sudo tail -f /dev/claviersetr ---disable-inotify`. Vous pouvez ensuite appuyer sur toutes les touches une à une de gauche à droite et du haut vers le bas (c'est-à-dire 1, 2, 3, ...). Vous devrez ensuite effectuer les combinaisons de touches 13, 45, 89, *4, #3, 19 et 8# suivies d'un appui de plusieurs secondes sur la touche * ;
-      - Pour finir, toujours dans le même terminal, déchargez le driver précedent pour charger le driver reposant sur la méthode des interruptions et effectuer à nouveaux les appuis demandés ci-dessus.
+Ce travail doit être réalisé **en équipe de deux**, la charge de travail étant à répartir équitablement entre les deux membres de l'équipe. Aucun rapport n'est à remettre, mais vous devez soumettre votre code source dans monPortail avant le **21 mars 2024, 17h00**. Ensuite, lors de la séance de laboratoire du **22 mars 2024**, les deux équipiers doivent être en mesure individuellement d'expliquer leur approche et de démontrer le bon fonctionnement de l'ensemble de la solution de l'équipe du laboratoire. Si vous ne pouvez pas vous y présenter, contactez l'équipe pédagogique du cours dans les plus brefs délais afin de convenir d'une date d'évaluation alternative. Ce travail compte pour **15%** de la note totale du cours. Comme pour les travaux précédents, votre code doit compiler **sans avertissements** de la part de GCC.
 
 
-Ce travail compte pour **15%** de la note totale du cours.
+Notre évaluation se fera sur le Raspberry Pi de l'enseignant ou de l'assistant, connecté à un clavier 3 ou 4 colonnes (selon vos préférences) et comprendra notamment les éléments suivants:
+
+  1. La sortie de compilation d'un *clean rebuild*
+  2. L'insertion du module setr_driver_polling avec `insmod` et la validation de son initialisation correcte en observant `dmesg`
+  3. Le lancement de la commande `sudo tail -f /dev/claviersetr ---disable-inotify` suivi du test de toutes les touches une par une, puis deux par deux, puis d'un appui prolongé sur une des touches.
+  4. L'arrêt du module setr_driver_polling avec `rmmod` et la validation de sa terminaison correcte en observant `dmesg`
+  5. L'insertion du module setr_driver_irq avec `insmod` et la validation de son initialisation correcte en observant `dmesg`
+  6. Répétition des étapes 3 et 4 pour le module avec IRQ
+  
+Il se peut que nous utilisions des outils tel que htop pour monitorer l'utilisation CPU au cours des différents tests (et s'assurer par exemple que votre module avec IRQ n'utilise pas d'attente active).
+
+
+### 5.1. Barème d'évaluation
 
 Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 points) :
 
-* (1 pts) Le module noyau se charge sans erreur et s'initialise correctement.
-* (4 pts) Pour le premier module, le clavier est lu par *polling* correctement (les valeurs retournées sont les bonnes, dans le bon ordre).
-* (4 pts) Pour le second module, les interruptions sont bien gérées et le clavier est lu sans nécessiter un *polling* continuel lorsqu'aucune touche n'est enfoncée.
-* (2 pts) Le fichier /dev/claviersetr est bien créé et fonctionne comme demandé.
+#### 5.1.1. Qualité du code remis (6 points)
+
+* (3 pts) Le code C est valide, complet et ne contient pas d'erreurs empêchant le bon déroulement des programmes.
+* (1 pts) Les deux modules compilent sans avertissement (*warning*) de la part du compilateur.
 * (2 pts) La synchronisation entre le thread d'écriture et la fonction de lecture est adéquate, de même que la gestion du tampon circulaire.
-* (1 pts) Le pilote gère la pression simultanée de plusieurs touches (au moins 2).
-* (4 pts) Les étudiants sont en mesure d'expliquer l'approche utilisée et de répondre aux questions concernant leur code.
-* (2 pts) Les deux modules (*setr_driver_polling* et *setr_driver_irq*) compilent sans erreurs et sans avertissements
+
+#### 5.1.2. Validité de la solution (10 points)
+
+> **Attention** : un programme ne compilant pas obtient automatiquement une note de **zéro** pour cette section.
+
+* (1 pts) Le module noyau se charge sans erreur et s'initialise correctement.
+* (2 pts) Le fichier /dev/claviersetr est bien créé et fonctionne comme demandé.
+* (3 pts) Pour le premier module, le clavier est lu par *polling* correctement (les valeurs retournées sont les bonnes, dans le bon ordre).
+* (3 pts) Pour le second module, les interruptions sont bien gérées et le clavier est lu sans nécessiter un *polling* continuel lorsqu'aucune touche n'est enfoncée.
+* (1 pts) Les pilotes gèrent la pression simultanée de plusieurs touches (au moins 2).
+
+#### 5.1.3. Justesse des explications et réponses aux questions (4 points)
+
+* (4 pts) Les étudiants sont en mesure d'expliquer l'approche utilisée et de répondre aux questions concernant leur code et la théorie liée au laboratoire.
 
 
 ## 6. Ressources et lectures connexes
 
-* [Le dépôt Git contenant les fichiers de base](https://github.com/setr-ulaval/labo4-h23)
+* [Le dépôt Git contenant les fichiers de base](https://github.com/setr-ulaval/labo4-h24)
 * [Linux Device Drivers, Third Edition](https://lwn.net/Kernel/LDD3/), un excellent guide (bien que pas totalement à jour) sur l'écriture de pilotes pour le noyau Linux
 * [Documentation des fonctions d'accès aux GPIO](https://www.kernel.org/doc/Documentation/gpio/gpio-legacy.txt) dans le noyau Linux
 * [Un excellent guide sur l'écriture d'un pilote pour GPIO sous Linux](http://derekmolloy.ie/writing-a-linux-kernel-module-part-1-introduction/), duquel est en partie inspiré ce laboratoire
