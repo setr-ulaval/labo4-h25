@@ -38,9 +38,14 @@
 // Le nombre de caractères pouvant être contenus dans le buffer circulaire
 #define TAILLE_BUFFER 256
 
+// Définit le nombre de lignes et de colonnes de votre clavier
+// TODO: adaptez-le selon le modèle de clavier que vous avez!
+#define NOMBRE_LIGNES 4
+#define NOMBRE_COLONNES 3
+
 
 // On déclare tout de suite le nom de la fonction gérant les interruptions
-static irq_handler_t  setr_irq_handler(unsigned int irq, void *dev_id, struct pt_regs *regs);
+static irqreturn_t  setr_irq_handler(unsigned int irq, void *dev_id);
 
 // Déclaration des fonctions pour gérer notre fichier
 // Nous ne définissons que open(), close() et read()
@@ -67,35 +72,51 @@ static struct device* setrDevice = NULL;    // Contiendra les informations sur l
 static struct mutex sync;                   // Mutex servant à synchroniser les accès au buffer
 static atomic_t irqActif = ATOMIC_INIT(1);  // Pour déterminer si les interruptions doivent être traitées
 
-// 4 GPIO doivent être assignés pour l'écriture, et 4 en lecture (voir énoncé)
+
+// 4 GPIO doivent être assignés pour l'écriture, et 3 ou 4 en lecture (voir énoncé)
 // Nous vous proposons les choix suivants, mais ce n'est pas obligatoire
 static int  gpiosEcrire[] = {5, 6, 13, 19};             // Correspond aux pins 29, 31, 33 et 35
-static int  gpiosLire[] = {12, 16, 20, 21};             // Correspond aux pins 32, 36, 38, et 40
 // Les noms des différents GPIO
 static char* gpiosEcrireNoms[] = {"OUT1", "OUT2", "OUT3", "OUT4"};
-static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3", "IN4"};
 
-static unsigned int irqId[4];               // Contient les numéros d'interruption pour chaque broche de lecture
+#if NOMBRE_COLONNES == 3
+    static int  gpiosLire[] = {12, 16, 20};             // Correspond aux pins 32, 36 et 38 
+    static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3"};
+#else
+    static int  gpiosLire[] = {12, 16, 20, 21};             // Correspond aux pins 32, 36, 38 et 40
+    static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3", "IN4"};
+#endif
+
+static unsigned int irqId[NOMBRE_COLONNES];               // Contient les numéros d'interruption pour chaque broche de lecture
 
 // Les patrons de balayage (une seule ligne doit être active à la fois)
-static int   patterns[4][4] = {
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1}
-};
-
+static int   patterns[NOMBRE_LIGNES][NOMBRE_LIGNES] = {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0},
+        {0, 0, 0, 1}
+    };
+    
 // Les valeurs du clavier, selon la ligne et la colonne actives
-static char valeursClavier[4][4] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}
-};
+#if NOMBRE_COLONNES == 3
+    static char valeursClavier[NOMBRE_LIGNES][NOMBRE_COLONNES] = {
+        {'1', '2', '3'},
+        {'4', '5', '6'},
+        {'7', '8', '9'},
+        {'*', '0', '#'}
+    };
+#else
+    static char valeursClavier[NOMBRE_LIGNES][NOMBRE_COLONNES] = {
+        {'1', '2', '3', 'A'},
+        {'4', '5', '6', 'B'},
+        {'7', '8', '9', 'C'},
+        {'*', '0', '#', 'D'}
+    };
+#endif
 
 // Permet de se souvenir du dernier état du clavier,
 // pour ne pas répéter une touche qui était déjà enfoncée.
-static int dernierEtat[4][4] = {0};
+static int dernierEtat[NOMBRE_LIGNES][NOMBRE_COLONNES] = {0};
 
 // Durée (en ms) du "debounce" des touches
 static int dureeDebounce = 50;
@@ -129,11 +150,11 @@ void func_tasklet_polling(unsigned long paramf){
 
 }
 
-// On déclare le tasklet avec la macro DECLARE_TASKLET
-DECLARE_TASKLET(tasklet_polling, func_tasklet_polling, 0);
+// On déclare le tasklet avec la macro DECLARE_TASKLET_OLD
+DECLARE_TASKLET_OLD(tasklet_polling, func_tasklet_polling);
 
 
-static irq_handler_t  setr_irq_handler(unsigned int irq, void *dev_id, struct pt_regs *regs){
+static irqreturn_t  setr_irq_handler(unsigned int irq, void *dev_id){
     // Ceci est la fonction recevant l'interruption. Son seul rôle consiste à
     // céduler un tasklet qui fera le travail de balayage.
     // Attention toutefois : ce balayage ne doit pas faire en sorte que de _nouvelles_
@@ -145,17 +166,17 @@ static irq_handler_t  setr_irq_handler(unsigned int irq, void *dev_id, struct pt
     // TODO
 
     // On retourne en indiquant qu'on a géré l'interruption
-    return (irq_handler_t) IRQ_HANDLED;
+    return (irqreturn_t) IRQ_HANDLED;
 }
 
 
 static int __init setrclavier_init(void){
     int i, ok;
-    printk(KERN_INFO "SETR_CLAVIER : Initialisation du driver commencee\n");
+    printk(KERN_INFO "SETR_CLAVIER_IRQ : Initialisation du driver commencee\n");
 
     majorNumber = register_chrdev(0, DEV_NAME, &fops);
     if (majorNumber<0){
-      printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de l'appel a register_chrdev!\n");
+      printk(KERN_ALERT "SETR_CLAVIER_IRQ : Erreur lors de l'appel a register_chrdev!\n");
       return majorNumber;
     }
 
@@ -163,17 +184,17 @@ static int __init setrclavier_init(void){
     setrClasse = class_create(THIS_MODULE, CLS_NAME);
     if (IS_ERR(setrClasse)){
       unregister_chrdev(majorNumber, DEV_NAME);
-      printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de la creation de la classe de peripherique\n");
+      printk(KERN_ALERT "SETR_CLAVIER_IRQ : Erreur lors de la creation de la classe de peripherique\n");
       return PTR_ERR(setrClasse);
     }
-    printk(KERN_INFO "EBBChar: device class registered correctly\n");
+    printk(KERN_INFO "SETR_CLAVIER_IRQ : device class OK\n");
 
     // Création du pilote de périphérique associé
     setrDevice = device_create(setrClasse, NULL, MKDEV(majorNumber, 0), NULL, DEV_NAME);
     if (IS_ERR(setrDevice)){
       class_destroy(setrClasse);
       unregister_chrdev(majorNumber, DEV_NAME);
-      printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de la creation du pilote de peripherique\n");
+      printk(KERN_ALERT "SETR_CLAVIER_IRQ : Erreur lors de la creation du pilote de peripherique\n");
       return PTR_ERR(setrDevice);
     }
 
@@ -203,7 +224,7 @@ static int __init setrclavier_init(void){
         printk(KERN_ALERT "Erreur (%d) lors de l'enregistrement IRQ #{%d}!\n", ok, irqno);
 
 
-        printk(KERN_INFO "SETR_CLAVIER : Fin de l'Initialisation!\n"); // Made it! device was initialized
+        printk(KERN_INFO "SETR_CLAVIER_IRQ : Fin de l'Initialisation!\n"); // Made it! device was initialized
 
     return 0;
 }
@@ -223,19 +244,19 @@ static void __exit setrclavier_exit(void){
     class_unregister(setrClasse);
     class_destroy(setrClasse);
     unregister_chrdev(majorNumber, DEV_NAME);
-    printk(KERN_INFO "SETR_CLAVIER : Terminaison du driver\n");
+    printk(KERN_INFO "SETR_CLAVIER_IRQ : Terminaison du driver\n");
 }
 
 
 
 
 static int dev_open(struct inode *inodep, struct file *filep){
-    printk(KERN_INFO "SETR_CLAVIER : Ouverture!\n");
+    printk(KERN_INFO "SETR_CLAVIER_IRQ : Ouverture!\n");
     // Rien à faire ici, si ce n'est retourner une valeur de succès
     return 0;
 }
 static int dev_release(struct inode *inodep, struct file *filep){
-   printk(KERN_INFO "SETR_CLAVIER : Fermeture!\n");
+   printk(KERN_INFO "SETR_CLAVIER_IRQ : Fermeture!\n");
    // Rien à faire ici, si ce n'est retourner une valeur de succès
    return 0;
 }
@@ -270,4 +291,4 @@ module_exit(setrclavier_exit);
 MODULE_LICENSE("GPL");            // Licence : laissez "GPL"
 MODULE_AUTHOR("Vous!");           // Vos noms
 MODULE_DESCRIPTION("Lecteur de clavier externe, avec interruptions");  // Description du module
-MODULE_VERSION("0.3");            // Numéro de version
+MODULE_VERSION("0.4");            // Numéro de version

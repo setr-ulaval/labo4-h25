@@ -40,6 +40,11 @@
 // Le nombre de caractères pouvant être contenus dans le buffer circulaire
 #define TAILLE_BUFFER 256
 
+// Définit le nombre de lignes et de colonnes de votre clavier
+// TODO: adaptez-le selon le modèle de clavier que vous avez!
+#define NOMBRE_LIGNES 4
+#define NOMBRE_COLONNES 3
+
 
 // Déclaration des fonctions pour gérer notre fichier
 // Nous ne définissons que open(), close() et read()
@@ -66,34 +71,51 @@ static struct device* setrDevice = NULL;    // Contiendra les informations sur l
 static struct mutex sync;                          // Mutex servant à synchroniser les accès au buffer
 static struct task_struct *task;            // Réfère au thread noyau
 
-// 4 GPIO doivent être assignés pour l'écriture, et 4 en lecture (voir énoncé)
+
+// 4 GPIO doivent être assignés pour l'écriture, et 3 ou 4 en lecture (voir énoncé)
 // Nous vous proposons les choix suivants, mais ce n'est pas obligatoire
 static int  gpiosEcrire[] = {5, 6, 13, 19};             // Correspond aux pins 29, 31, 33 et 35
-static int  gpiosLire[] = {12, 16, 20, 21};             // Correspond aux pins 32, 36, 38, et 40
 // Les noms des différents GPIO
 static char* gpiosEcrireNoms[] = {"OUT1", "OUT2", "OUT3", "OUT4"};
-static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3", "IN4"};
+
+#if NOMBRE_COLONNES == 3
+    static int  gpiosLire[] = {12, 16, 20};             // Correspond aux pins 32, 36 et 38 
+    static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3"};
+#else
+    static int  gpiosLire[] = {12, 16, 20, 21};             // Correspond aux pins 32, 36, 38 et 40
+    static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3", "IN4"};
+#endif
+
+static unsigned int irqId[NOMBRE_COLONNES];               // Contient les numéros d'interruption pour chaque broche de lecture
 
 // Les patrons de balayage (une seule ligne doit être active à la fois)
-static int   patterns[4][4] = {
-    {1, 0, 0, 0},
-    {0, 1, 0, 0},
-    {0, 0, 1, 0},
-    {0, 0, 0, 1}
-};
-
+static int   patterns[NOMBRE_LIGNES][NOMBRE_LIGNES] = {
+        {1, 0, 0, 0},
+        {0, 1, 0, 0},
+        {0, 0, 1, 0},
+        {0, 0, 0, 1}
+    };
+    
 // Les valeurs du clavier, selon la ligne et la colonne actives
-static char valeursClavier[4][4] = {
-    {'1', '2', '3', 'A'},
-    {'4', '5', '6', 'B'},
-    {'7', '8', '9', 'C'},
-    {'*', '0', '#', 'D'}
-};
+#if NOMBRE_COLONNES == 3
+    static char valeursClavier[NOMBRE_LIGNES][NOMBRE_COLONNES] = {
+        {'1', '2', '3'},
+        {'4', '5', '6'},
+        {'7', '8', '9'},
+        {'*', '0', '#'}
+    };
+#else
+    static char valeursClavier[NOMBRE_LIGNES][NOMBRE_COLONNES] = {
+        {'1', '2', '3', 'A'},
+        {'4', '5', '6', 'B'},
+        {'7', '8', '9', 'C'},
+        {'*', '0', '#', 'D'}
+    };
+#endif
 
 // Permet de se souvenir du dernier état du clavier,
 // pour ne pas répéter une touche qui était déjà enfoncée.
-static int dernierEtat[4][4] = {0};
-
+static int dernierEtat[NOMBRE_LIGNES][NOMBRE_COLONNES] = {0};
 
 
 // Vous devez déclarer cette variable comme paramètre
@@ -234,4 +256,4 @@ module_exit(setrclavier_exit);
 MODULE_LICENSE("GPL");            // Licence : laissez "GPL"
 MODULE_AUTHOR("Vous!");           // Vos noms
 MODULE_DESCRIPTION("Lecteur de clavier externe");  // Description du module
-MODULE_VERSION("0.3");            // Numéri de version
+MODULE_VERSION("0.4");            // Numéro de version
