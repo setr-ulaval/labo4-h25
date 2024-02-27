@@ -125,7 +125,7 @@ Il peut arriver que votre module soit entré dans un état invalide et qu'il ne 
 Pour tester la sortie de votre périphérique (autrement dit, s'il renvoie bien les touches pressées, dans le bon ordre), vous pouvez utiliser la commande suivante :
 
 ```
-sudo tail -f /dev/claviersetr ---disable-inotify
+sudo tail -f /dev/setrclavier ---disable-inotify
 ```
 
 Cette commande lit votre pseudo-fichier à intervalle régulier (à chaque seconde par défaut) et afficher les nouveaux caractères au fur et à mesure. Notez que le paramètre *disable-inotify* doit bel et bien être précédé de *trois* tirets!
@@ -146,7 +146,7 @@ Notre évaluation se fera sur le Raspberry Pi de l'enseignant ou de l'assistant,
 
   1. La sortie de compilation d'un *clean rebuild*
   2. L'insertion du module setr_driver_polling avec `insmod` et la validation de son initialisation correcte en observant `dmesg`
-  3. Le lancement de la commande `sudo tail -f /dev/claviersetr ---disable-inotify` suivi du test de toutes les touches une par une, puis deux par deux, puis d'un appui prolongé sur une des touches.
+  3. Le lancement de la commande `sudo tail -f /dev/setrclavier ---disable-inotify` suivi du test de toutes les touches une par une, puis deux par deux, puis d'un appui prolongé sur une des touches.
   4. L'arrêt du module setr_driver_polling avec `rmmod` et la validation de sa terminaison correcte en observant `dmesg`
   5. L'insertion du module setr_driver_irq avec `insmod` et la validation de son initialisation correcte en observant `dmesg`
   6. Répétition des étapes 3 et 4 pour le module avec IRQ
@@ -169,7 +169,7 @@ Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 po
 > **Attention** : un programme ne compilant pas obtient automatiquement une note de **zéro** pour cette section.
 
 * (1 pts) Le module noyau se charge sans erreur et s'initialise correctement.
-* (2 pts) Le fichier /dev/claviersetr est bien créé et fonctionne comme demandé.
+* (2 pts) Le fichier /dev/setrclavier est bien créé et fonctionne comme demandé.
 * (3 pts) Pour le premier module, le clavier est lu par *polling* correctement (les valeurs retournées sont les bonnes, dans le bon ordre).
 * (3 pts) Pour le second module, les interruptions sont bien gérées et le clavier est lu sans nécessiter un *polling* continuel lorsqu'aucune touche n'est enfoncée.
 * (1 pts) Les pilotes gèrent la pression simultanée de plusieurs touches (au moins 2).
