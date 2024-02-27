@@ -68,7 +68,7 @@ Le code de base et les fichiers *Makefile* nécessaires à la compilation des mo
 
 ### 4.1. Méthode de lecture du clavier
 
-Il existe sur le marché plusieurs types de claviers. Les plus évolués, tel votre clavier d'ordinateur, possèdent un microcontrôleur leur permettant de communiquer avec l'ordinateur en utilisant un protocole haut niveau (par exemple l'USB ou le Bluetooth). Toutefois, certains claviers sont conceptuellement beaucoup plus simples et nécessitent plus de travail de la part de l'ordinateur. C'est le cas du petit clavier que vous avez en votre possession. Ce clavier possède seulement 8 fils pour 16 touches, il est donc aisé de constater qu'une association 1:1 entre les fils et les touches est impossible.
+Il existe sur le marché plusieurs types de claviers. Les plus évolués, tel votre clavier d'ordinateur, possèdent un microcontrôleur leur permettant de communiquer avec l'ordinateur en utilisant un protocole haut niveau (par exemple l'USB ou le Bluetooth). Toutefois, certains claviers sont conceptuellement beaucoup plus simples et nécessitent plus de travail de la part de l'ordinateur. C'est le cas du petit clavier que vous avez en votre possession. Ce clavier possède seulement 7 fils pour 12 touches (ou 8 fils pour 16 touches dans le cas du clavier 4x4), il est donc aisé de constater qu'une association 1:1 entre les fils et les touches est impossible.
 
 En fait, chaque fil est relié à une *ligne* ou à une *colonne* du clavier. Chaque touche permet quant à elle de mettre en contact une ligne et une colonne. Si on applique par exemple une tension sur la deuxième ligne, alors une pression de la touche *6*, mettant en contact la deuxième ligne et la troisième colonne, va faire apparaître cette tension sur la troisième colonne. Observer cette tension nous permet donc de dire si la touche *6* est pressée ou non. De même, si une tension est présente sur la troisième ligne et la touche *8* enfoncée, alors cette tension apparaîtra sur la seconde colonne.
 
@@ -87,7 +87,7 @@ La première tâche d'un module est de s'initialiser en créant les structures d
 
 La plupart des modules noyau s'interfacent avec le reste du système en utilisant l'abstraction du système de fichiers (rappelez-vous : sous Unix, tout est un fichier!). Les modules créent ainsi un certain nombre de pseudo-fichiers qui peuvent être utilisés pour communiquer avec eux. Dans le cadre de ce laboratoire, nous vous demandons de créer *un pseudo-fichier* :
 
-* **/dev/claviersetr**, un périphérique accessible en lecture seulement en mode *caractère*. Lorsqu'ouvert en lecture, ce fichier retourne les caractères saisis sur le clavier externe. Lorsqu'aucun caractère n'est disponible, il retourne simplement 0. Vous devez vous assurer de conserver *tous* les caractères qui n'ont pas encore été lus via ce fichier, même si ce fichier n'est pas lu pendant une longue période, dans la limite de la taille du tampon de votre module!
+* **/dev/setrclavier**, un périphérique accessible en lecture seulement en mode *caractère*. Lorsqu'ouvert en lecture, ce fichier retourne les caractères saisis sur le clavier externe. Lorsqu'aucun caractère n'est disponible, il retourne simplement 0. Vous devez vous assurer de conserver *tous* les caractères qui n'ont pas encore été lus via ce fichier, même si ce fichier n'est pas lu pendant une longue période, dans la limite de la taille du tampon de votre module!
 
 ### 4.4. Écriture d'un module : 3) Accès aux GPIO
 
@@ -95,7 +95,7 @@ L'accès aux GPIO peut être un casse-tête sur des systèmes complexes tels que
 
 ### 4.5. Écriture d'un module : 4) Lecture du clavier par « polling »
 
-Comme première tâche, vous devrez compléter et tester le fichier *setr_driver.c*. Ce pilote fonctionne sur le principe du *polling* : un thread noyau est lancé et balaye constamment les lignes du clavier afin de déterminer si une nouvelle touche a été enfoncée. À la fin de chaque balayage, il se met en pause pour une courte période de temps afin d'éviter de monopoliser un processeur.
+Comme première tâche, vous devrez compléter et tester le fichier *setr_driver_polling.c*. Ce pilote fonctionne sur le principe du *polling* : un thread noyau est lancé et balaye constamment les lignes du clavier afin de déterminer si une nouvelle touche a été enfoncée. À la fin de chaque balayage, il se met en pause pour une courte période de temps afin d'éviter de monopoliser un processeur.
 
 Complétez ce fichier et vérifiez son bon fonctionnement. En particulier, vérifiez si 1) votre système prend en compte l'appui d'une touche et 2) ne la prend en compte qu'une seule fois lorsqu'elle n'est pas relâchée. Prenez le temps de lire *tous* les commentaires contenus dans le fichier, ils contiennent des informations importantes qui pourront vous être très utile. Observez également comment la charge processeur varie selon la durée de temps de repos que le thread requiert après chaque itération. Que se passe-t-il si on supprime carrément cette pause?
 
@@ -109,7 +109,7 @@ Le système de lecture conçu jusqu'à maintenant est relativement peu efficace,
 
 Comme on peut le constater, l'algorithme de lecture reste le même. La différence majeure est plutôt que, cette fois, le système n'a pas besoin *d'activement* vérifier la pression d'une touche, mais compte sur une interruption pour le lui signaler, ce qui est bien plus efficace.
 
-Pour implémenter cet algorithme, basez-vous sur le fichier *setr_driver_irq.c*. Ce pilote est très similaire au précédent, mais alloue aussi des interruptions sur les broches de lecture. Par ailleurs, il n'y a plus de *thread* noyau : à sa place, un *tasklet* doit être appelé après chaque interruption, interruption dont la durée doit être la plus courte possible. Ce tasklet doit effectuer la tâche qui était précédemment dévolue au thread noyau, à savoir balayer les lignes pour déterminer quelle touche a été pressée. Comme pour la tâche précédente, voyez le fichier en question et en particulier ses commentaires pour plus de détails.
+Pour implémenter cet algorithme, basez-vous sur le fichier *setr_driver_irq.c*. Ce pilote est très similaire au précédent, mais associe aussi des interruptions aux broches de lecture. Par ailleurs, il n'y a plus de *thread* noyau : à sa place, un *tasklet* doit être appelé après chaque interruption, interruption dont la durée doit être la plus courte possible. Ce tasklet doit effectuer la tâche qui était précédemment dévolue au thread noyau, à savoir balayer les lignes pour déterminer quelle touche a été pressée. Comme pour la tâche précédente, voyez le fichier en question et en particulier ses commentaires pour plus de détails.
 
 ### 4.7. Gestion des appuis multiples
 

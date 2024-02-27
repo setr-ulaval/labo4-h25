@@ -86,10 +86,8 @@ static char* gpiosEcrireNoms[] = {"OUT1", "OUT2", "OUT3", "OUT4"};
     static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3", "IN4"};
 #endif
 
-static unsigned int irqId[NOMBRE_COLONNES];               // Contient les numéros d'interruption pour chaque broche de lecture
-
 // Les patrons de balayage (une seule ligne doit être active à la fois)
-static int   patterns[NOMBRE_LIGNES][NOMBRE_LIGNES] = {
+static int   patronsBalayage[NOMBRE_LIGNES][NOMBRE_LIGNES] = {
         {1, 0, 0, 0},
         {0, 1, 0, 0},
         {0, 0, 1, 0},
@@ -122,9 +120,6 @@ static int dernierEtat[NOMBRE_LIGNES][NOMBRE_COLONNES] = {0};
 static unsigned int pausePollingMs = 20;
 module_param(pausePollingMs, uint, S_IRUGO);
 MODULE_PARM_DESC(pausePollingMs, " Duree de la pause apres chaque polling (en ms, 20ms par defaut)");
-
-// Durée (en ms) du "debounce" des touches
-static int dureeDebounce = 50;
 
 
 
@@ -183,8 +178,6 @@ static int __init setrclavier_init(void){
     // Initialisez les GPIO. Chaque GPIO utilisé doit être enregistré (fonction gpio_request)
     // et se voir donner une direction (gpio_direction_input / gpio_direction_output).
     // Ces opérations peuvent également être combinées si vous trouvez la bonne fonction pour le faire.
-    // Finalement, assurez-vous que les entrées soient robustes aux rebondissements (bouncing).
-    // Vous devez mettre en place un "debouncing" en utilisant le paramètre dureeDebounce défini plus haut.
     //
     // Vous devez également initialiser le mutex de synchronisation.
 
