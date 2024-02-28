@@ -1,5 +1,5 @@
 /******************************************************************************
-* H2023
+* H2024
 * LABORATOIRE 4, Systèmes embarqués et temps réel
 * Ébauche de code pour le pilote utilisant les interruptions
 * Marc-André Gardner, mars 2019
