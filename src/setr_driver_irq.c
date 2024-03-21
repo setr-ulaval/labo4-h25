@@ -32,7 +32,7 @@
 #include <linux/atomic.h>           // Synchronisation par valeur atomique
 
 // Le nom de notre périphérique et le nom de sa classe
-#define DEV_NAME "claviersetr"
+#define DEV_NAME "setrclavier"
 #define CLS_NAME "setr"
 
 // Le nombre de caractères pouvant être contenus dans le buffer circulaire
