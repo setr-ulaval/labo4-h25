@@ -2,7 +2,7 @@
 * H2024
 * LABORATOIRE 4, Systèmes embarqués et temps réel
 * Ébauche de code pour le pilote utilisant le polling
-* Marc-André Gardner, mars 2019
+* Marc-André Gardner, H2025
 *
 * Ce fichier contient la structure du pilote qu'il vous faut implémenter. Ce
 * pilote fonctionne en mode "polling", c'est-à-dire qu'il vérifie en permanance

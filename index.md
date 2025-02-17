@@ -36,12 +36,12 @@ Comme vous pouvez le constater, toutes les broches ne sont pas équivalentes. Ce
 
 ## 3. Préparation et outils nécessaires (logiciels)
 
-Les ébauches de code sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h24](https://github.com/setr-ulaval/labo4-h24). Vous y retrouvez, comme pour les autres laboratoires, un projet VScode et deux fichiers source correspondant aux deux pilotes que vous devrez implémenter. Notez que la configuration qui vous est fournie assume que vous avez bâti votre environnement de compilation croisée en suivant à la lettre les instructions du laboratoire 1. Si vous obtenez des erreurs liées à des en-têtes manquants, vérifiez que vous avez bien utilisé les sources du noyau correspondant à la version présente sur le Raspberry Pi. Pour cette même raison, vous ne devez *pas* avoir mis à jour le noyau installé sur votre Raspberry Pi.
+Les ébauches de code sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h25](https://github.com/setr-ulaval/labo4-h25). Vous y retrouvez, comme pour les autres laboratoires, un projet VScode et deux fichiers source correspondant aux deux pilotes que vous devrez implémenter. Notez que la configuration qui vous est fournie assume que vous avez bâti votre environnement de compilation croisée en suivant à la lettre les instructions du laboratoire 1. Si vous obtenez des erreurs liées à des en-têtes manquants, vérifiez que vous avez bien utilisé les sources du noyau correspondant à la version présente sur le Raspberry Pi. Pour cette même raison, vous ne devez *pas* avoir mis à jour le noyau installé sur votre Raspberry Pi.
 
 La compilation et l'édition de liens d'un module noyau constituent probablement une des tâches les plus délicates pour un environnement de compilation croisée. Pour cette raison, le noyau Linux possède son propre système de compilation, basé sur *Make*; nous n'utiliserons donc pas CMake dans le cadre de ce laboratoire.
 
 ### 3.1. Téléchargement du noyau
-Compiler un module noyau requiert d'avoir une version compilée du noyau sur votre machine hôte. Vous pouvez télécharger l'archive [suivante](http://wcours.gel.ulaval.ca/GIF3004/setrh24/linux-rpi-6.1.54-rt15.compiled.tar.gz) dans le dossier `$HOME/rPi` de la VM ou de votre ordinateur. Pour que le laboratoire fonctionne, le chemin suivant doit contenir les fichiers : `$HOME/rPi/linux-rpi-6.1.54-rt15.compiled/linux-rpi-6.1.54-rt15`. Si vous souhaitez installer le noyau dans un autre dossier, assurez vous de modifier la ligne 5 du `Makefile` du projet avec votre propre chemin.
+Compiler un module noyau requiert d'avoir une version compilée du noyau sur votre machine hôte. Vous pouvez télécharger l'archive [suivante](https://wcours.gel.ulaval.ca/GIF3004/setrh25/linux-rpi-6.1.54-rt15.compiled.tar.gz) dans le dossier `$HOME/rPi` de la VM ou de votre ordinateur. Pour que le laboratoire fonctionne, le chemin suivant doit contenir les fichiers : `$HOME/rPi/linux-rpi-6.1.54-rt15.compiled/linux-rpi-6.1.54-rt15`. Si vous souhaitez installer le noyau dans un autre dossier, assurez vous de modifier la ligne 5 du `Makefile` du projet avec votre propre chemin.
 
 > Note : il se peut que la colorisation syntaxique indique des erreurs dans la directive _include_ de linux/kthread.h. Ce n'est pas un problème tant que vous pouvez tout de même compiler vos programmes sans erreur ni avertissement.
 
@@ -64,7 +64,7 @@ Notez que comme l'exécution d'un module noyau se fait logiquement en mode privi
 
 ## 4. Énoncé
 
-Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h24](https://github.com/setr-ulaval/labo4-h24).
+Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h24](https://github.com/setr-ulaval/labo4-h25).
 
 ### 4.1. Méthode de lecture du clavier
 
@@ -139,7 +139,7 @@ Le laboratoire comporte deux livrables :
 1. Module du pilote effectuant une lecture du clavier par « pooling » (fichier *setr_driver_polling.c*);
 2. Module du pilote effectuant une lecture du clavier par interruption (fichier *setr_driver_irq.c*).
 
-Ce travail doit être réalisé **en équipe de deux**, la charge de travail étant à répartir équitablement entre les deux membres de l'équipe. Aucun rapport n'est à remettre, mais vous devez soumettre votre code source dans monPortail avant le **21 mars 2024, 17h00**. Ensuite, lors de la séance de laboratoire du **22 mars 2024**, les deux équipiers doivent être en mesure individuellement d'expliquer leur approche et de démontrer le bon fonctionnement de l'ensemble de la solution de l'équipe du laboratoire. Si vous ne pouvez pas vous y présenter, contactez l'équipe pédagogique du cours dans les plus brefs délais afin de convenir d'une date d'évaluation alternative. Ce travail compte pour **12%** de la note totale du cours. Comme pour les travaux précédents, votre code doit compiler **sans avertissements** de la part de GCC.
+Ce travail doit être réalisé **en équipe de deux**, la charge de travail étant à répartir équitablement entre les deux membres de l'équipe. Aucun rapport n'est à remettre, mais vous devez soumettre votre code source dans monPortail avant le **27 mars 2025, 17h00**. Ensuite, lors de la séance de laboratoire du **28 mars 2025**, les deux équipiers doivent être en mesure individuellement d'expliquer leur approche et de démontrer le bon fonctionnement de l'ensemble de la solution de l'équipe du laboratoire. Si vous ne pouvez pas vous y présenter, contactez l'équipe pédagogique du cours dans les plus brefs délais afin de convenir d'une date d'évaluation alternative. Ce travail compte pour **12%** de la note totale du cours. Comme pour les travaux précédents, votre code doit compiler **sans avertissements** de la part de GCC.
 
 
 Notre évaluation se fera sur le Raspberry Pi de l'enseignant ou de l'assistant, connecté à un clavier 3 ou 4 colonnes (selon vos préférences) et comprendra notamment les éléments suivants:
@@ -158,11 +158,11 @@ Il se peut que nous utilisions des outils tel que htop pour monitorer l'utilisat
 
 Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 points) :
 
-#### 5.1.1. Qualité du code remis (6 points)
+#### 5.1.1. Qualité du code remis (5 points)
 
 * (3 pts) Le code C est valide, complet et ne contient pas d'erreurs empêchant le bon déroulement des programmes.
 * (1 pts) Les deux modules compilent sans avertissement (*warning*) de la part du compilateur.
-* (2 pts) La synchronisation entre le thread d'écriture et la fonction de lecture est adéquate, de même que la gestion du tampon circulaire.
+* (1 pts) La synchronisation entre le thread d'écriture et la fonction de lecture est adéquate, de même que la gestion du tampon circulaire.
 
 #### 5.1.2. Validité de la solution (10 points)
 
@@ -174,9 +174,9 @@ Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 po
 * (3 pts) Pour le second module, les interruptions sont bien gérées et le clavier est lu sans nécessiter un *polling* continuel lorsqu'aucune touche n'est enfoncée.
 * (1 pts) Les pilotes gèrent la pression simultanée de plusieurs touches (au moins 2).
 
-#### 5.1.3. Justesse des explications et réponses aux questions (4 points)
+#### 5.1.3. Justesse des explications et réponses aux questions (5 points)
 
-* (4 pts) Les étudiants sont en mesure d'expliquer l'approche utilisée et de répondre aux questions concernant leur code et la théorie liée au laboratoire.
+* (5 pts) Les étudiants sont en mesure d'expliquer l'approche utilisée et de répondre aux questions concernant leur code et la théorie liée au laboratoire.
 
 
 ## 6. Ressources et lectures connexes
