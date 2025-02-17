@@ -36,7 +36,7 @@
 #define CLS_NAME "setr"
 
 // Le nombre de caractères pouvant être contenus dans le buffer circulaire
-#define TAILLE_BUFFER 256
+#define TAILLE_BUFFER 10
 
 // Définit le nombre de lignes et de colonnes de votre clavier
 // TODO: adaptez-le selon le modèle de clavier que vous avez!

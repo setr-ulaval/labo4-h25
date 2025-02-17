@@ -38,7 +38,7 @@
 #define CLS_NAME "setr"
 
 // Le nombre de caractères pouvant être contenus dans le buffer circulaire
-#define TAILLE_BUFFER 256
+#define TAILLE_BUFFER 10
 
 // Définit le nombre de lignes et de colonnes de votre clavier
 // TODO: adaptez-le selon le modèle de clavier que vous avez!
@@ -249,4 +249,4 @@ module_exit(setrclavier_exit);
 MODULE_LICENSE("GPL");            // Licence : laissez "GPL"
 MODULE_AUTHOR("Vous!");           // Vos noms
 MODULE_DESCRIPTION("Lecteur de clavier externe");  // Description du module
-MODULE_VERSION("0.4");            // Numéro de version
+MODULE_VERSION("0.5");            // Numéro de version

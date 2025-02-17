@@ -12,7 +12,7 @@ Ce travail pratique vise les objectifs suivants :
 4. Se familiariser avec les classes de dispositifs de caractères et à l'utilisation du sous-système de fichier /dev;
 5. Apprendre à utiliser judicieusement les interruptions dans un système embarqué.
 
-> **IMPORTANT : l'archive des sources Linux téléchargée lors du laboratoire 1 est incomplète. Lisez et effectuez les actions de la section 3.1 _avant toute chose_.**
+> **IMPORTANT : vous devez ajouter des fichiers d'en-tête dans votre environnement de développement pour que la compilation fonctionne. Lisez et effectuez les actions de la section 3.1 _avant toute chose_.**
 
 ## 2. Préparation et outils nécessaires (matériel)
 
@@ -51,6 +51,8 @@ Contrairement à l'habitude, n'utilisez pas la commande `CMake : Build` pour com
 
 > Notez que tout comme pour les laboratoires précédents, vos fichiers doivent non seulement compiler sans erreur, mais aussi **sans avertissement** de la part du compilateur!
 
+> Note : la ligne `warning: the compiler differs from the one used to build the kernel` n'est **pas** un avertissement du compilateur. Vous pouvez l'ignorer.
+
 
 ### 3.3. Insertion des modules et débogage
 
@@ -64,7 +66,7 @@ Notez que comme l'exécution d'un module noyau se fait logiquement en mode privi
 
 ## 4. Énoncé
 
-Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h24](https://github.com/setr-ulaval/labo4-h25).
+Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h25](https://github.com/setr-ulaval/labo4-h25).
 
 ### 4.1. Méthode de lecture du clavier
 
@@ -181,7 +183,7 @@ Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 po
 
 ## 6. Ressources et lectures connexes
 
-* [Le dépôt Git contenant les fichiers de base](https://github.com/setr-ulaval/labo4-h24)
+* [Le dépôt Git contenant les fichiers de base](https://github.com/setr-ulaval/labo4-h25)
 * [Linux Device Drivers, Third Edition](https://lwn.net/Kernel/LDD3/), un excellent guide (bien que pas totalement à jour) sur l'écriture de pilotes pour le noyau Linux
 * [Documentation des fonctions d'accès aux GPIO](https://www.kernel.org/doc/Documentation/gpio/gpio-legacy.txt) dans le noyau Linux
 * [Un excellent guide sur l'écriture d'un pilote pour GPIO sous Linux](http://derekmolloy.ie/writing-a-linux-kernel-module-part-1-introduction/), duquel est en partie inspiré ce laboratoire
