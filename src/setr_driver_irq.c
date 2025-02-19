@@ -73,7 +73,7 @@ static struct class*  setrClasse  = NULL;   // Contiendra les informations sur l
 static struct device* setrDevice = NULL;    // Contiendra les informations sur le périphérique associé
 
 static struct mutex sync;                   // Mutex servant à synchroniser les accès au buffer
-static atomic_t irqActif = ATOMIC_INIT(1);  // Pour déterminer si les interruptions doivent être traitées
+static atomic_t irqEnCours = ATOMIC_INIT(0);  // Pour déterminer si les interruptions doivent être traitées
 
 
 // 4 GPIO doivent être assignés pour l'écriture, et 3 ou 4 en lecture (voir énoncé)
@@ -166,7 +166,7 @@ void func_tasklet_polling(unsigned long paramf){
     //      les niveaux des broches de lecture, il ne faut pas que ce soit interprété
     //      comme une nouvelle pression sur une touche, sinon ce tasklet sera rappelé
     //      en boucle! Vous êtes libres d'utiliser l'approche que vous souhaitez pour
-    //      éviter cela, mais la variable atomique irqActive pourrait vous être utile...
+    //      éviter cela, mais la variable atomique irqEnCours pourrait vous être utile...
     // 2) De passer au travers de tous les patrons de balayage
     // 3) Pour chaque patron, vérifier la valeur des lignes d'entrée
     // 4) Selon ces valeurs et le contenu de dernierEtat, déterminer si une nouvelle touche a été pressée
