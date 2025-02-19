@@ -16,21 +16,21 @@ Ce travail pratique vise les objectifs suivants :
 
 ## 2. Préparation et outils nécessaires (matériel)
 
-Ce laboratoire est quelque peu différent des précédents, puisque vous devrez utiliser du matériel supplémentaire, en l'occurrence le petit clavier externe à 12 ou 16 touches que vous avez déjà utilisé dans le cours *Systèmes microprocesseur et interfaces*. Pour ceux n'ayant pas suivi le cours *Systèmes microprocesseur et interfaces*, vous pouvez vous procurer le clavier au magasin de département de génie électrique et de génie informatique. Pensez aussi à avoir le filage (ex. jumpers) pour faire la connexion aux RPi.
+Ce laboratoire est quelque peu différent des précédents, puisque vous devrez utiliser du matériel supplémentaire, en l'occurrence un petit clavier externe à 12 ou 16 touches. Pour ceux qui n'en aurait pas en leur possession, vous pouvez vous procurer le clavier au magasin de département de génie électrique et de génie informatique. Pensez aussi à avoir le filage (ex. jumpers) pour faire la connexion aux RPi.
 
 > Note : selon les arrivages, le clavier peut avoir soit trois, soit quatre colonnes. L'un ou l'autre des modèles est valable pour ce laboratoire, mais assurez-vous de configurer correctement votre code lorsque demandé, en particulier dans la macro `NOMBRE_COLONNES` définie au début de chaque fichier.
 
-Ce clavier est très rudimentaire et vous devrez concevoir la logique nécessaire à sa lecture. Il possède *sept* fils d'entrée/sortie : 4 connexions pour les lignes (terminaisons noires) et 3 ou 4 pour les colonnes (terminaisons blanches). Ces sorties seront connectées aux *GPIO* (*General Purpose Input-Output*) de votre Raspberry Pi Zero. Ce dernier possède 40 points (pins) de connexion, agencés selon le schéma suivant (source : [element14](https://www.element14.com/community/docs/DOC-73950/l/raspberry-pi-3-model-b-gpio-40-pin-block-pinout)) :
+Ce clavier est très rudimentaire et vous devrez concevoir la logique nécessaire à sa lecture. Il possède *sept* fils d'entrée/sortie : 4 connexions pour les lignes (terminaisons noires) et 3 ou 4 pour les colonnes (terminaisons blanches). Ces sorties seront connectées aux *GPIO* (*General Purpose Input-Output*) de votre Raspberry Pi Zero W. Ce dernier possède 40 points (pins) de connexion, agencés selon le schéma suivant (source : [element14](https://www.element14.com/community/docs/DOC-73950/l/raspberry-pi-3-model-b-gpio-40-pin-block-pinout)) :
 
 <img src="img/header_pinout.jpg" style="width:500px"/> <img src="img/fils_clavier_crop.jpg" style="width:220px"/>
 
-Vous observerez que sur votre Raspberry Pi Zero, une seule de ces broches possède un contact carré. C'est cette broche qui constitue la broche #1 et vous permet d'orienter le schéma présenté ci-dessus. En d'autres termes, la broche #1 est celle encerclée en rouge dans l'image suivante :
+Vous observerez que sur votre Raspberry Pi Zero W, une seule de ces broches possède un contact carré. C'est cette broche qui constitue la broche #1 et vous permet d'orienter le schéma présenté ci-dessus. En d'autres termes, la broche #1 est celle encerclée en rouge dans l'image suivante :
 
 <img src="img/rpizeroBoard.jpg" style="width:700px"/>
 
 Vous devriez avoir des connecteurs déjà soudés sur les broches de votre Raspberry Pi. Si ce n'est pas le cas, vous pouvez le faire faire au service technique pour une somme modique.
 
-Comme vous pouvez le constater, toutes les broches ne sont pas équivalentes. Certaines peuvent cumuler plusieurs fonctions alors que d'autres sont simplement des références pour la masse (Ground) ou des sources de tension. Dans le cadre de ce laboratoire, nous vous suggérons de brancher les *lignes* du clavier (qui seront écrites par le Raspberry Pi) sur les broches 29, 31, 33 et 35. De même, les *colonnes* du clavier (qui seront lues) devraient être branchées aux broches 32, 36 et 38. Si vous avez un clavier à 4 colonnes, utilisez également la broche 40. D'autres configurations peuvent fonctionner et vous êtes libre de les utiliser, mais celle que nous vous proposons fonctionne à coup sûr. Si vous utilisez le clavier à 12 ou 16 touches du cours de SMI, le schéma présenté ci-dessus, à droite, peut vous aider à vous repérer. Dans ce schéma, les fils sont numérotés de gauche à droite. Le fil **1** est connecté à la première *ligne* (la plus haute) du clavier, le **2** à la seconde, et ainsi de suite. Le fil **5** est connecté à la première *colonne* (celle de *gauche*) du clavier, le fil **6** à la seconde et ainsi de suite.
+Comme vous pouvez le constater, toutes les broches ne sont pas équivalentes. Certaines peuvent cumuler plusieurs fonctions alors que d'autres sont simplement des références pour la masse (Ground) ou des sources de tension. Dans le cadre de ce laboratoire, nous vous suggérons de brancher les *lignes* du clavier (qui seront écrites par le Raspberry Pi) sur les broches 29, 31, 33 et 35. De même, les *colonnes* du clavier (qui seront lues) devraient être branchées aux broches 32, 36 et 38. Si vous avez un clavier à 4 colonnes, utilisez également la broche 40. D'autres configurations peuvent fonctionner et vous êtes libre de les utiliser, mais celle que nous vous proposons fonctionne à coup sûr. Le schéma du clavier et de ses connexions présenté ci-dessus, à droite, peut vous aider à vous repérer. Dans ce schéma, les fils sont numérotés de gauche à droite. Le fil **1** est connecté à la première *ligne* (la plus haute) du clavier, le **2** à la seconde, et ainsi de suite. Le fil **5** est connecté à la première *colonne* (celle de *gauche*) du clavier, le fil **6** à la seconde et ainsi de suite.
 
 **Attention lors des connexions** : les broches de sortie du Raspberry Pi sont des interfaces très rudimentaires et, en particulier, elles ne possèdent pas vraiment de systèmes de protection en cas de mauvais branchement. Brancher par exemple une ligne sous tension à une broche reliée à masse (*ground*) court-circuitera à coup sûr votre Raspberry Pi! Assurez-vous toujours que vos branchements sont corrects et qu'il n'y a pas de faux contacts avant de mettre l'ordinateur sous tension! Par ailleurs, nous vous *recommandons fortement* de ne pas changer les connexions alors que le Raspberry Pi est sous tension!
 
@@ -62,7 +62,7 @@ Une fois vos modules compilés sans erreur, transférez les sur votre Raspberry 
 
 Par la suite, ouvrez un terminal SSH sur le Raspberry Pi et allez dans le répertoire contenant les fichiers *.ko*. Vous pouvez maintenant tenter d'insérer chaque module (un à la fois) dans le noyau en utilisant *sudo insmod nom_du_fichier.ko*. Si tout se passe bien, la commande retournera sans erreur et un *lsmod* confirmera la présence de votre module. Vous pouvez alors le tester!
 
-Notez que comme l'exécution d'un module noyau se fait logiquement en mode privilégié, il est impossible de le lancer en utiliser gdb. C'est donc dire que *vous ne pouvez utiliser les outils de débogage de VScode comme dans les laboratoires précédents*. Vous pouvez utiliser *printk* et autres fonctions pour rapporter de l'information de débogage.
+Notez que comme l'exécution d'un module noyau se fait logiquement en mode privilégié, il est impossible de le lancer en utiliser un débogueur comme GDB. C'est donc dire que *vous ne pouvez utiliser les outils de débogage de VScode comme dans les laboratoires précédents*. Vous pouvez utiliser *printk* et autres fonctions pour rapporter de l'information de débogage.
 
 ## 4. Énoncé
 
@@ -70,13 +70,13 @@ Le code de base et les fichiers *Makefile* nécessaires à la compilation des mo
 
 ### 4.1. Méthode de lecture du clavier
 
-Il existe sur le marché plusieurs types de claviers. Les plus évolués, tel votre clavier d'ordinateur, possèdent un microcontrôleur leur permettant de communiquer avec l'ordinateur en utilisant un protocole haut niveau (par exemple l'USB ou le Bluetooth). Toutefois, certains claviers sont conceptuellement beaucoup plus simples et nécessitent plus de travail de la part de l'ordinateur. C'est le cas du petit clavier que vous avez en votre possession. Ce clavier possède seulement 7 fils pour 12 touches (ou 8 fils pour 16 touches dans le cas du clavier 4x4), il est donc aisé de constater qu'une association 1:1 entre les fils et les touches est impossible.
+Il existe sur le marché plusieurs types de claviers. Les plus évolués, tel votre clavier d'ordinateur, possèdent un microcontrôleur leur permettant de communiquer avec l'ordinateur en utilisant un protocole haut niveau (par exemple USB ou Bluetooth). Toutefois, certains claviers sont conceptuellement beaucoup plus simples et nécessitent plus de travail de la part de l'ordinateur. C'est le cas du petit clavier que vous avez en votre possession. Ce clavier possède seulement 7 fils pour 12 touches (ou 8 fils pour 16 touches dans le cas du clavier 4x4), il est donc aisé de constater qu'une association 1:1 entre les fils et les touches est impossible.
 
 En fait, chaque fil est relié à une *ligne* ou à une *colonne* du clavier. Chaque touche permet quant à elle de mettre en contact une ligne et une colonne. Si on applique par exemple une tension sur la deuxième ligne, alors une pression de la touche *6*, mettant en contact la deuxième ligne et la troisième colonne, va faire apparaître cette tension sur la troisième colonne. Observer cette tension nous permet donc de dire si la touche *6* est pressée ou non. De même, si une tension est présente sur la troisième ligne et la touche *8* enfoncée, alors cette tension apparaîtra sur la seconde colonne.
 
 On remarque immédiatement un problème potentiel : si on applique à la fois une tension sur la première et la seconde ligne, il devient impossible de différencier une pression de la touche *3* et de la touche *6*, puisque ces deux actions produisent le même résultat (une tension sur la troisième colonne). Par conséquent, notre pilote va devoir scanner les lignes, une par une, afin de déterminer précisément quelle touche est enfoncée. En d'autres termes, l'algorithme de lecture sera le suivant :
 
-1. On applique une tension sur la première ligne.
+1. On applique une tension sur la première ligne, en s'assurant que toutes les autres lignes soient à une tension nulle.
 2. On vérifie si une tension est apparue sur une des colonnes. Si oui, nous savons qu'une touche est pressée, à l'intersection de la ligne courante et de la colonne sur laquelle une tension a été détectée.
 3. On passe à la seconde ligne et vérifie à nouveau si une tension apparaît sur une des colonnes.
 4. Ainsi de suite, jusqu'à la dernière ligne, après quoi le cycle recommence.
@@ -89,11 +89,13 @@ La première tâche d'un module est de s'initialiser en créant les structures d
 
 La plupart des modules noyau s'interfacent avec le reste du système en utilisant l'abstraction du système de fichiers (rappelez-vous : sous Unix, tout est un fichier!). Les modules créent ainsi un certain nombre de pseudo-fichiers qui peuvent être utilisés pour communiquer avec eux. Dans le cadre de ce laboratoire, nous vous demandons de créer *un pseudo-fichier* :
 
-* **/dev/setrclavier**, un périphérique accessible en lecture seulement en mode *caractère*. Lorsqu'ouvert en lecture, ce fichier retourne les caractères saisis sur le clavier externe. Lorsqu'aucun caractère n'est disponible, il retourne simplement 0. Vous devez vous assurer de conserver *tous* les caractères qui n'ont pas encore été lus via ce fichier, même si ce fichier n'est pas lu pendant une longue période, dans la limite de la taille du tampon de votre module!
+* **/dev/setrclavier**, un périphérique accessible en lecture seulement en mode *caractère*. Lorsqu'ouvert en lecture, ce fichier retourne les caractères saisis sur le clavier externe. Lorsqu'aucun caractère n'est disponible, il ne retourne rien (la lecture n'échoue pas, mais rien n'est renvoyée). Vous devez vous assurer de conserver *tous* les caractères qui n'ont pas encore été lus via ce fichier, même si ce fichier n'est pas lu pendant une longue période, dans la limite de la taille du tampon de votre module!
 
 ### 4.4. Écriture d'un module : 3) Accès aux GPIO
 
-L'accès aux GPIO peut être un casse-tête sur des systèmes complexes tels que le Raspberry Pi. Heureusement, le noyau Linux fournit une couche d'abstraction pour leur utilisation, dont vous pouvez retrouver [la documentation ici](https://www.kernel.org/doc/Documentation/gpio/gpio-legacy.txt). Nous allons donc utiliser ces fonctions au lieu d'interagir directement avec le matériel. Notez que cette API est maintenant dépréciée au profit d'une nouvelle API plus moderne. Toutefois, dans le cadre du laboratoire, nous nous contenterons de l'API « historique » (*legacy*), qui est beaucoup plus simple à utiliser.
+L'accès aux GPIO peut être un casse-tête sur des systèmes complexes tels que le Raspberry Pi. Heureusement, le noyau Linux fournit une couche d'abstraction pour leur utilisation, dont vous pouvez retrouver [la documentation ici](https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html) et [ici (pour ce qui concerne le _mapping_ des GPIO)](https://www.kernel.org/doc/html/v5.2/driver-api/gpio/board.html#platform-data). Nous allons donc utiliser ces fonctions au lieu d'interagir directement avec le matériel.
+
+> **Important** : vous **devez** utiliser cette couche d'abstraction nommée "GPIO Descriptor Consumer Interface". Il existe plusieurs façons de le faire (autrement dit, plusieurs fonctions sont équivalentes), mais ces fonctions _doivent_ provenir de cette API et non, par exemple, de l'API "legacy" (avec des noms de fonction commençant par `gpio_*` au lieu de `gpiod_*`).
 
 ### 4.5. Écriture d'un module : 4) Lecture du clavier par « polling »
 
@@ -116,6 +118,8 @@ Pour implémenter cet algorithme, basez-vous sur le fichier *setr_driver_irq.c*.
 ### 4.7. Gestion des appuis multiples
 
 Vous aurez remarqué que l'algorithme suggéré n'est pas exempt de problèmes. En particulier, si plusieurs touches sont pressées simultanément, il se peut que notre pilote « manque » des touches, ou voit au contraire des pressions « fantômes », qui n'existent pas réellement. Il existe plusieurs solutions, matérielles ou logicielles, pour régler ce problème, jusqu'à un certain point. Implémentez-en une qui supporte la pression simultanée *d'au moins deux (2) touches* et démontrez son efficacité. Notez bien que vous n'avez évidemment pas le droit de changer de clavier... Pour ceux qui veulent aller plus loin, serait-il possible de gérer la pression simultanée de trois touches?
+
+> Note : le contrôleur GPIO du Raspberry Pi Zero W ne supporte pas le _debouncing_ (comme vous pouvez le constater vous-mêmes en essayant d'utiliser `gpiod_set_debounce`). Par conséquent, certaines variations rapides des touches peuvent faire en sorte de doubler un appui, particulièrement dans la version avec interruptions (qui réagit très rapidement après l'appui d'une touche). Régler ce problème d'origine électronique impliquerait soit d'ajouter du matériel (e.g., condensateurs de découplage, résistantes pull-down, etc.) soit de complexifier grandement votre code. Nous ne pénaliserons donc pas une simple répétition / touche "fantôme" occasionnelle. Par contre, nous pénaliserons des erreurs comme une répétition de plus d'une occurrence ou "éternelle" (une touche qui se répète sans arrêt), un caractère apparaissant alors qu'aucune touche n'est pressée, un caractère n'apparaissant pas alors que sa touche est pressée, ou un caractère fantôme systématique (si _toutes_ les pressions conduisent à une lecture erronée).
 
 
 ### 4.8. Débogage et tests
@@ -149,9 +153,10 @@ Notre évaluation se fera sur le Raspberry Pi de l'enseignant ou de l'assistant,
   1. La sortie de compilation d'un *clean rebuild*
   2. L'insertion du module setr_driver_polling avec `insmod` et la validation de son initialisation correcte en observant `dmesg`
   3. Le lancement de la commande `sudo tail -f /dev/setrclavier ---disable-inotify` suivi du test de toutes les touches une par une, puis deux par deux, puis d'un appui prolongé sur une des touches.
-  4. L'arrêt du module setr_driver_polling avec `rmmod` et la validation de sa terminaison correcte en observant `dmesg`
-  5. L'insertion du module setr_driver_irq avec `insmod` et la validation de son initialisation correcte en observant `dmesg`
-  6. Répétition des étapes 3 et 4 pour le module avec IRQ
+  4. La validation du bon fonctionnement du tampon circulaire en terminant le processus `tail`, en appuyant sur plus de touches que ne peut contenir le tampon circulaire, puis en lisant le contenant du tampon avec un nouveau `tail`.
+  5. L'arrêt du module setr_driver_polling avec `rmmod` et la validation de sa terminaison correcte en observant `dmesg`
+  6. L'insertion du module setr_driver_irq avec `insmod` et la validation de son initialisation correcte en observant `dmesg`
+  7. Répétition des étapes 3, 4 et 5 pour le module avec IRQ
   
 Il se peut que nous utilisions des outils tel que htop pour monitorer l'utilisation CPU au cours des différents tests (et s'assurer par exemple que votre module avec IRQ n'utilise pas d'attente active).
 
@@ -162,7 +167,7 @@ Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 po
 
 #### 5.1.1. Qualité du code remis (5 points)
 
-* (3 pts) Le code C est valide, complet et ne contient pas d'erreurs empêchant le bon déroulement des programmes.
+* (3 pts) Le code C est valide, complet, ne contient pas d'erreurs empêchant le bon déroulement des programmes et utilise l'API "GPIO Descriptor Consumer Interface" (les fonctions dont le nom commence par `gpiod_`).
 * (1 pts) Les deux modules compilent sans avertissement (*warning*) de la part du compilateur.
 * (1 pts) La synchronisation entre le thread d'écriture et la fonction de lecture est adéquate, de même que la gestion du tampon circulaire.
 

@@ -1,5 +1,5 @@
 /******************************************************************************
-* H2024
+* H2025
 * LABORATOIRE 4, Systèmes embarqués et temps réel
 * Ébauche de code pour le pilote utilisant les interruptions
 * Marc-André Gardner, H2025
@@ -23,6 +23,7 @@
 #include <linux/device.h>           // Pour créer un pilote
 #include <linux/kernel.h>           // Différentes définitions de types liés au noyau
 #include <linux/gpio.h>             // Pour accéder aux GPIO du Raspberry Pi
+#include <linux/gpio/machine.h>     // Idem
 #include <linux/fs.h>               // Pour accéder au système de fichier et créer un fichier spécial dans /dev
 #include <linux/uaccess.h>          // Permet d'accéder à copy_to_user et copy_from_user
 #include <linux/delay.h>            // Fonctions d'attente, en particulier msleep
@@ -36,6 +37,8 @@
 #define CLS_NAME "setr"
 
 // Le nombre de caractères pouvant être contenus dans le buffer circulaire
+// Ce nombre est volontairement très bas pour vous permettre de tester votre logique
+// de buffer circulaire en cas de dépassement de la capacité du buffer
 #define TAILLE_BUFFER 10
 
 // Définit le nombre de lignes et de colonnes de votre clavier
@@ -75,27 +78,44 @@ static atomic_t irqActif = ATOMIC_INIT(1);  // Pour déterminer si les interrupt
 
 // 4 GPIO doivent être assignés pour l'écriture, et 3 ou 4 en lecture (voir énoncé)
 // Nous vous proposons les choix suivants, mais ce n'est pas obligatoire
-static int  gpiosEcrire[] = {5, 6, 13, 19};             // Correspond aux pins 29, 31, 33 et 35
-// Les noms des différents GPIO
-static char* gpiosEcrireNoms[] = {"OUT1", "OUT2", "OUT3", "OUT4"};
+// Dans la table suivante, chaque ligne réfère à _un_ GPIO en particulier.
+// Le premier argument de chaque ligne ("pinctrl-bcm2835") ne doit pas être changé,
+//      il réfère au contrôleur enregistré sur le Raspberry Pi Zero W.
+// Le second argument est le numéro du _GPIO_ (PAS le Pin# du Raspberry Pi). Par
+//      exemple, la _pin_ 36 du Raspberry Pi Zero correspond au GPIO 16, c'est donc
+//      16 qu'il faut mettre ici. Voyez le schéma au début de l'énoncé pour plus de détails.
+// Le 3e argument est un identifiant que nous utiliserons pour enregistrer nos GPIO en groupe
+//      (tous les GPIO d'écriture ensemble et tous les GPIO de lecture ensemble) avec
+//      gpiod_get_array.
+// Le 4e argument est un index qui désigne spécifiquement chaque GPIO dans un groupe. Lorsque
+//      vous lirez ou écrirez dans un groupe, le "bitmap" demandé est un entier où chaque _bit_
+//      correspond à l'état d'un GPIO. Par exemple, avec la table telle que définie plus bas,
+//      le bit le moins significatif (LSB) du bitmap appliqué sur le groupe "écriture"
+//      écrira/lira le GPIO 5. Le second bit sera lié au GPIO 6, le 3e au GPIO 13, et ainsi de suite.
+// Le 5e argument est une suite de drapeaux paramétrant le GPIO. Ici, nous n'avons besoin que 
+//      de signifier que nous voulons que nos GPIO soient "active high", c'est-à-dire qu'écrire un
+//      "1" entraîne un voltage "haut" sur la pin. Vous pouvez trouver les autres drapeaux possibles
+//      ici : https://www.kernel.org/doc/html/v5.2/driver-api/gpio/board.html#platform-data
+static  struct gpiod_lookup_table gpios_table = {
+    .dev_id = DEV_NAME,
+    .table = {           /* Nom du contrôleur,GPIO, identifiant, index, actif haut ou bas */
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 5,  "ecriture", 0, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 6,  "ecriture", 1, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 13, "ecriture", 2, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 19, "ecriture", 3, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 12, "lecture",  0, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 16, "lecture",  1, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 20, "lecture",  2, GPIO_ACTIVE_HIGH),
+            #if NOMBRE_COLONNES == 4
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 21, "lecture", 3, GPIO_ACTIVE_HIGH),
+            #endif
+            { },        // Toujours laisser une entrée vide à la fin!
+    },
+};
 
-#if NOMBRE_COLONNES == 3
-    static int  gpiosLire[] = {12, 16, 20};             // Correspond aux pins 32, 36 et 38 
-    static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3"};
-#else
-    static int  gpiosLire[] = {12, 16, 20, 21};             // Correspond aux pins 32, 36, 38 et 40
-    static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3", "IN4"};
-#endif
+// Contiendra les descripteurs conservant la configuration des GPIO
+static struct gpio_descs *gpioLecture, *gpioEcriture;
 
-static unsigned int irqId[NOMBRE_COLONNES];               // Contient les numéros d'interruption pour chaque broche de lecture
-
-// Les patrons de balayage (une seule ligne doit être active à la fois)
-static int   patronsBalayage[NOMBRE_LIGNES][NOMBRE_LIGNES] = {
-        {1, 0, 0, 0},
-        {0, 1, 0, 0},
-        {0, 0, 1, 0},
-        {0, 0, 0, 1}
-    };
     
 // Les valeurs du clavier, selon la ligne et la colonne actives
 #if NOMBRE_COLONNES == 3
@@ -118,19 +138,27 @@ static int   patronsBalayage[NOMBRE_LIGNES][NOMBRE_LIGNES] = {
 // pour ne pas répéter une touche qui était déjà enfoncée.
 static int dernierEtat[NOMBRE_LIGNES][NOMBRE_COLONNES] = {0};
 
-
+// Contient les numéros d'interruption pour chaque broche de lecture
+static unsigned int irqId[NOMBRE_COLONNES];               
 
 
 
 void func_tasklet_polling(unsigned long paramf){
+    // TODO
+    // Déclarez _toutes_ vos variables locales ici (le module est compilé avec un standard générant
+    // un warning si une variable est déclarée après toute ligne de code)
+    
     // Cette fonction est le coeur d'exécution du tasklet
     // Elle fait à peu de choses près la même chose que le kthread
     // dans le pilote que vous avez précédemment écrit (par polling),
     // à savoir qu'elle balaye les différentes lignes pour trouver quelle
     // touche est pressée.
-    // Une différence majeure est que ce tasklet ne contient pas de boucle,
+    // Une différence majeure est que ce tasklet ne s'exécute pas sans cesse,
     // il ne s'exécute qu'une seule fois par interruption!
-    int patternIdx, ligneIdx, colIdx, val;
+    //
+    // Important: Vous DEVEZ utiliser l'API "GPIO Descriptor Consumer Interface"
+    // (ref : https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html)
+    
 
     // TODO
     // Écrivez le code permettant
@@ -145,6 +173,10 @@ void func_tasklet_polling(unsigned long paramf){
     // 5) Mettre à jour le buffer et dernierEtat en vous assurant d'éviter les race conditions avec le reste du module
     // 6) Remettre toutes les lignes à 1 (pour réarmer l'interruption)
     // 7) Réactiver le traitement des interruptions
+    //
+    // Information importante : vous n'en avez techniquement pas besoin de toute façon puisque
+    // cette fonction n'a pas à être exécutée en boucle, mais vous ne pouvez _pas_
+    // faire un msleep ou une autre fonction similaire dans un tasklet!
 
 }
 
@@ -154,13 +186,15 @@ DECLARE_TASKLET_OLD(tasklet_polling, func_tasklet_polling);
 
 static irqreturn_t  setr_irq_handler(unsigned int irq, void *dev_id){
     // Ceci est la fonction recevant l'interruption. Son seul rôle consiste à
-    // céduler un tasklet qui fera le travail de balayage.
+    // céduler un tasklet qui fera le travail effectif de balayage.
     // Attention toutefois : ce balayage ne doit pas faire en sorte que de _nouvelles_
     // interruptions soient traitées et lancent encore le tasklet, sinon vous vous
     // retrouverez dans une boucle sans fin où le tasklet crée des interruptions,
     // qui lancent le tasklet, qui crée des interruptions, etc.
     // Voyez les commentaires du tasklet pour une piste potentielle de synchronisation.
-    // Le seul travail de cette IRQ est de céduler un tasklet qui fera le travail
+    //
+    // N'oubliez pas que ce IRQ handler devrait en faire le _minimum_ et déférer le
+    // plus possible le traitement au tasklet!
     // TODO
 
     // On retourne en indiquant qu'on a géré l'interruption
@@ -169,7 +203,10 @@ static irqreturn_t  setr_irq_handler(unsigned int irq, void *dev_id){
 
 
 static int __init setrclavier_init(void){
-    int i, ok;
+    // TODO
+    // Déclarez _toutes_ vos variables locales ici (le module est compilé avec un standard générant
+    // un warning si une variable est déclarée après toute ligne de code)
+    int ok;
     printk(KERN_INFO "SETR_CLAVIER_IRQ : Initialisation du driver commencee\n");
 
     majorNumber = register_chrdev(0, DEV_NAME, &fops);
@@ -197,13 +234,20 @@ static int __init setrclavier_init(void){
     }
 
 
-    // TODO
-    // Initialisez les GPIO. Chaque GPIO utilisé doit être enregistré (fonction gpio_request)
-    // et se voir donner une direction (gpio_direction_input / gpio_direction_output).
-    // Ces opérations peuvent également être combinées si vous trouvez la bonne fonction pour le faire.
+   // TODO
+    // Initialisez les GPIO. Pour ce faire, vous DEVEZ utiliser l'API "GPIO Descriptor Consumer Interface"
+    // https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html
+    //
+    // Plus précisément, dans l'initialisation, vous devrez:
+    // 1) Utiliser gpiod_add_lookup_table pour enregistrer la table de correspondances
+    //      définie dans gpios_table (plus haut)
+    // 2) Appeler 2 fois gpiod_get_array (une fois pour les GPIO en lecture, une fois pour ceux en écriture)
+    //      et mettre le résultat dans gpioLecture et gpioEcriture (déclarés plus haut). Validez que les
+    //      appels de fonction réussissent en utilisant la macro IS_ERR().
+    //      N'oubliez pas de leur donner la bonne direction!
     //
     // Finalement, vous devez enregistrer une IRQ pour chaque GPIO en entrée. Utilisez
-    // pour ce faire gpio_to_irq, ce qui vous donnera le numéro d'interruption lié à un
+    // pour ce faire gpiod_to_irq, ce qui vous donnera le numéro d'interruption lié à un
     // GPIO en particulier, puis appelez request_irq comme présenté plus bas pour
     // enregistrer la fonction de traitement de l'interruption.
     // Attention, cette fonction devra être appelée 4 fois (une fois pour chaque GPIO)!
@@ -215,28 +259,36 @@ static int __init setrclavier_init(void){
          IRQF_TRIGGER_RISING,               // On veut une interruption sur le front montant (lorsque le bouton est pressé)
          "setr_irq_handler",                // Le nom de notre interruption
          NULL);                             // Paramètre supplémentaire inutile pour vous
-    if(ok != 0)
+    if(ok != 0){
         printk(KERN_ALERT "Erreur (%d) lors de l'enregistrement IRQ #{%d}!\n", ok, irqno);
+        device_destroy(setrClasse, MKDEV(majorNumber, 0));
+        class_destroy(setrClasse);
+        unregister_chrdev(majorNumber, DEV_NAME);
+        return ok;
+    }
 
 
-        printk(KERN_INFO "SETR_CLAVIER_IRQ : Fin de l'Initialisation!\n"); // Made it! device was initialized
+    printk(KERN_INFO "SETR_CLAVIER_IRQ : Fin de l'Initialisation!\n"); // Made it! device was initialized
 
     return 0;
 }
 
 
 static void __exit setrclavier_exit(void){
-    int i;
+    // TODO
+    // Déclarez _toutes_ vos variables locales ici (le module est compilé avec un standard générant
+    // un warning si une variable est déclarée après toute ligne de code)
 
     // TODO
     // Écrivez le code permettant de relâcher (libérer) les GPIO
-    // Vous aurez pour cela besoin de la fonction gpio_free
-    // Vous devrez également relâcher les interruptions qui ont été
-    // précédemment enregistrées. Utilisez free_irq(irqno, NULL)
+    // 1) Relâchez les interruptions qui ont été précédemment enregistrées. 
+    //      Utilisez free_irq(irqno, NULL) pour chaque GPIO
+    // 2) Libérez les GPIO obtenus dans l'initialisation
+    // 3) Retirez la table de correspondances avec gpiod_remove_lookup_table
+
 
     // On retire correctement les différentes composantes du pilote
     device_destroy(setrClasse, MKDEV(majorNumber, 0));
-    class_unregister(setrClasse);
     class_destroy(setrClasse);
     unregister_chrdev(majorNumber, DEV_NAME);
     printk(KERN_INFO "SETR_CLAVIER_IRQ : Terminaison du driver\n");
@@ -257,6 +309,9 @@ static int dev_release(struct inode *inodep, struct file *filep){
 }
 
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
+    // TODO
+    // Déclarez _toutes_ vos variables locales ici (le module est compilé avec un standard générant
+    // un warning si une variable est déclarée après toute ligne de code)
 
     // TODO
     // Implémentez cette fonction de lecture
@@ -286,4 +341,4 @@ module_exit(setrclavier_exit);
 MODULE_LICENSE("GPL");            // Licence : laissez "GPL"
 MODULE_AUTHOR("Vous!");           // Vos noms
 MODULE_DESCRIPTION("Lecteur de clavier externe, avec interruptions");  // Description du module
-MODULE_VERSION("0.4");            // Numéro de version
+MODULE_VERSION("2.0");            // Numéro de version

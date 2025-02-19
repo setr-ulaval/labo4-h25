@@ -1,5 +1,5 @@
 /******************************************************************************
-* H2024
+* H2025
 * LABORATOIRE 4, Systèmes embarqués et temps réel
 * Ébauche de code pour le pilote utilisant le polling
 * Marc-André Gardner, H2025
@@ -23,6 +23,7 @@
 #include <linux/device.h>           // Pour créer un pilote
 #include <linux/kernel.h>           // Différentes définitions de types liés au noyau
 #include <linux/gpio.h>             // Pour accéder aux GPIO du Raspberry Pi
+#include <linux/gpio/machine.h>     // Idem
 #include <linux/fs.h>               // Pour accéder au système de fichier et créer un fichier spécial dans /dev
 #include <linux/uaccess.h>          // Permet d'accéder à copy_to_user et copy_from_user
 #include <linux/kthread.h>          // Utilisation des threads noyau
@@ -38,6 +39,8 @@
 #define CLS_NAME "setr"
 
 // Le nombre de caractères pouvant être contenus dans le buffer circulaire
+// Ce nombre est volontairement très bas pour vous permettre de tester votre logique
+// de buffer circulaire en cas de dépassement de la capacité du buffer
 #define TAILLE_BUFFER 10
 
 // Définit le nombre de lignes et de colonnes de votre clavier
@@ -60,39 +63,58 @@ static struct file_operations fops =
 };
 
 // Variables globales et statiques utilisées dans le driver
-static int    majorNumber;                  // Numéro donné par le noyau à notre pilote
-static char   data[TAILLE_BUFFER] = {0};    // Buffer circulaire contenant les caractères du clavier
-static size_t posCouranteLecture = 0;       // Position de la prochaine lecture dans le buffer
-static size_t posCouranteEcriture = 0;      // Position de la prochaine écriture dans le buffer
+static int    majorNumber;                 // Numéro donné par le noyau à notre pilote
+static char   data[TAILLE_BUFFER] = {0};   // Buffer circulaire contenant les caractères du clavier
+static size_t posCouranteLecture = 0;      // Position de la prochaine lecture dans le buffer
+static size_t posCouranteEcriture = 0;     // Position de la prochaine écriture dans le buffer
 
-static struct class*  setrClasse  = NULL;   // Contiendra les informations sur la classe de notre pilote
-static struct device* setrDevice = NULL;    // Contiendra les informations sur le périphérique associé
+static struct class*  setrClasse  = NULL;  // Contiendra les informations sur la classe de notre pilote
+static struct device* setrDevice = NULL;   // Contiendra les informations sur le périphérique associé
 
-static struct mutex sync;                          // Mutex servant à synchroniser les accès au buffer
-static struct task_struct *task;            // Réfère au thread noyau
+static struct mutex sync;                  // Mutex servant à synchroniser les accès au buffer
+static struct task_struct *task;           // Réfère au thread noyau qui sera lancé
 
 
 // 4 GPIO doivent être assignés pour l'écriture, et 3 ou 4 en lecture (voir énoncé)
 // Nous vous proposons les choix suivants, mais ce n'est pas obligatoire
-static int  gpiosEcrire[] = {5, 6, 13, 19};             // Correspond aux pins 29, 31, 33 et 35
-// Les noms des différents GPIO
-static char* gpiosEcrireNoms[] = {"OUT1", "OUT2", "OUT3", "OUT4"};
+// Dans la table suivante, chaque ligne réfère à _un_ GPIO en particulier.
+// Le premier argument de chaque ligne ("pinctrl-bcm2835") ne doit pas être changé,
+//      il réfère au contrôleur enregistré sur le Raspberry Pi Zero W.
+// Le second argument est le numéro du _GPIO_ (PAS le Pin# du Raspberry Pi). Par
+//      exemple, la _pin_ 36 du Raspberry Pi Zero correspond au GPIO 16, c'est donc
+//      16 qu'il faut mettre ici. Voyez le schéma au début de l'énoncé pour plus de détails.
+// Le 3e argument est un identifiant que nous utiliserons pour enregistrer nos GPIO en groupe
+//      (tous les GPIO d'écriture ensemble et tous les GPIO de lecture ensemble) avec
+//      gpiod_get_array.
+// Le 4e argument est un index qui désigne spécifiquement chaque GPIO dans un groupe. Lorsque
+//      vous lirez ou écrirez dans un groupe, le "bitmap" demandé est un entier où chaque _bit_
+//      correspond à l'état d'un GPIO. Par exemple, avec la table telle que définie plus bas,
+//      le bit le moins significatif (LSB) du bitmap appliqué sur le groupe "écriture"
+//      écrira/lira le GPIO 5. Le second bit sera lié au GPIO 6, le 3e au GPIO 13, et ainsi de suite.
+// Le 5e argument est une suite de drapeaux paramétrant le GPIO. Ici, nous n'avons besoin que 
+//      de signifier que nous voulons que nos GPIO soient "active high", c'est-à-dire qu'écrire un
+//      "1" entraîne un voltage "haut" sur la pin. Vous pouvez trouver les autres drapeaux possibles
+//      ici : https://www.kernel.org/doc/html/v5.2/driver-api/gpio/board.html#platform-data
+static  struct gpiod_lookup_table gpios_table = {
+    .dev_id = DEV_NAME,
+    .table = {           /* Nom du contrôleur,GPIO, identifiant, index, actif haut ou bas */
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 5,  "ecriture", 0, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 6,  "ecriture", 1, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 13, "ecriture", 2, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 19, "ecriture", 3, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 12, "lecture",  0, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 16, "lecture",  1, GPIO_ACTIVE_HIGH),
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 20, "lecture",  2, GPIO_ACTIVE_HIGH),
+            #if NOMBRE_COLONNES == 4
+            GPIO_LOOKUP_IDX("pinctrl-bcm2835", 21, "lecture", 3, GPIO_ACTIVE_HIGH),
+            #endif
+            { },        // Toujours laisser une entrée vide à la fin!
+    },
+};
 
-#if NOMBRE_COLONNES == 3
-    static int  gpiosLire[] = {12, 16, 20};             // Correspond aux pins 32, 36 et 38 
-    static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3"};
-#else
-    static int  gpiosLire[] = {12, 16, 20, 21};             // Correspond aux pins 32, 36, 38 et 40
-    static char* gpiosLireNoms[] = {"IN1", "IN2", "IN3", "IN4"};
-#endif
+// Contiendra les descripteurs conservant la configuration des GPIO
+static struct gpio_descs *gpioLecture, *gpioEcriture;
 
-// Les patrons de balayage (une seule ligne doit être active à la fois)
-static int   patronsBalayage[NOMBRE_LIGNES][NOMBRE_LIGNES] = {
-        {1, 0, 0, 0},
-        {0, 1, 0, 0},
-        {0, 0, 1, 0},
-        {0, 0, 0, 1}
-    };
     
 // Les valeurs du clavier, selon la ligne et la colonne actives
 #if NOMBRE_COLONNES == 3
@@ -125,20 +147,28 @@ MODULE_PARM_DESC(pausePollingMs, " Duree de la pause apres chaque polling (en ms
 
 static int pollClavier(void *arg){
     // Cette fonction contient la boucle principale du thread détectant une pression sur une touche
-    int patternIdx, ligneIdx, colIdx, val;
+    
+    // TODO
+    // Déclarez _toutes_ vos variables locales ici (le module est compilé avec un standard générant
+    // un warning si une variable est déclarée après toute ligne de code)
+    
+    
     printk(KERN_INFO "SETR_CLAVIER : Poll clavier declenche! \n");
     while(!kthread_should_stop()){           // Permet de s'arrêter en douceur lorsque kthread_stop() sera appelé
       set_current_state(TASK_RUNNING);      // On indique qu'on est en train de faire quelque chose
 
       // TODO
-      // Écrivez le code permettant
-      // 1) De passer au travers de tous les patrons de balayage
-      // 2) Pour chaque patron, vérifier la valeur des lignes d'entrée
-      // 3) Selon ces valeurs et le contenu de dernierEtat, déterminer si une nouvelle touche a été pressée
-      // 4) Mettre à jour le buffer et dernierEtat en vous assurant d'éviter les race conditions avec le reste du module
+      // Écrivez le code permettant de lire la clavier. Vous DEVEZ utiliser l'API "GPIO Descriptor Consumer Interface"
+      // (ref : https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html)
+      //
+      // En détail, vous devrez créer une boucle qui, pour chaque ligne d'écriture:
+      // 1) Active cette ligne et désactive les autres (en utilisant gpiod_set_array_value)
+      // 2) Lit la valeur des lignes d'entrée
+      // 3) Selon ces valeurs et le contenu de dernierEtat, détermine si une nouvelle touche a été pressée
+      // 4) Met à jour le buffer et dernierEtat en s'assurant d'éviter les race conditions avec le reste du module
 
 
-      set_current_state(TASK_INTERRUPTIBLE); // On indique qu'on peut ere interrompu
+      set_current_state(TASK_INTERRUPTIBLE); // On indique qu'on peut être interrompu
       msleep(pausePollingMs);                // On se met en pause un certain temps
     }
     printk(KERN_INFO "SETR_CLAVIER : Poll clavier stop! \n");
@@ -147,37 +177,47 @@ static int pollClavier(void *arg){
 
 
 static int __init setrclavier_init(void){
-    int i, ok;
+    // TODO
+    // Déclarez _toutes_ vos variables locales ici (le module est compilé avec un standard générant
+    // un warning si une variable est déclarée après toute ligne de code)
+    
     printk(KERN_INFO "SETR_CLAVIER : Initialisation du driver commencee\n");
 
     // On enregistre notre pilote
     majorNumber = register_chrdev(0, DEV_NAME, &fops);
     if (majorNumber<0){
-      printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de l'appel a register_chrdev!\n");
-      return majorNumber;
+        printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de l'appel a register_chrdev!\n");
+        return majorNumber;
     }
 
     // Création de la classe de périphérique
     setrClasse = class_create(THIS_MODULE, CLS_NAME);
     if (IS_ERR(setrClasse)){
-      unregister_chrdev(majorNumber, DEV_NAME);
-      printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de la creation de la classe de peripherique\n");
-      return PTR_ERR(setrClasse);
+        unregister_chrdev(majorNumber, DEV_NAME);
+        printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de la creation de la classe de peripherique\n");
+        return PTR_ERR(setrClasse);
     }
 
     // Création du pilote de périphérique associé
     setrDevice = device_create(setrClasse, NULL, MKDEV(majorNumber, 0), NULL, DEV_NAME);
     if (IS_ERR(setrDevice)){
-      class_destroy(setrClasse);
-      unregister_chrdev(majorNumber, DEV_NAME);
-      printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de la creation du pilote de peripherique\n");
-      return PTR_ERR(setrDevice);
+        class_destroy(setrClasse);
+        unregister_chrdev(majorNumber, DEV_NAME);
+        printk(KERN_ALERT "SETR_CLAVIER : Erreur lors de la creation du pilote de peripherique\n");
+        return PTR_ERR(setrDevice);
     }
 
     // TODO
-    // Initialisez les GPIO. Chaque GPIO utilisé doit être enregistré (fonction gpio_request)
-    // et se voir donner une direction (gpio_direction_input / gpio_direction_output).
-    // Ces opérations peuvent également être combinées si vous trouvez la bonne fonction pour le faire.
+    // Initialisez les GPIO. Pour ce faire, vous DEVEZ utiliser l'API "GPIO Descriptor Consumer Interface"
+    // https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html
+    //
+    // Plus précisément, dans l'initialisation, vous devrez:
+    // 1) Utiliser gpiod_add_lookup_table pour enregistrer la table de correspondances
+    //      définie dans gpios_table (plus haut)
+    // 2) Appeler 2 fois gpiod_get_array (une fois pour les GPIO en lecture, une fois pour ceux en écriture)
+    //      et mettre le résultat dans gpioLecture et gpioEcriture (déclarés plus haut). Validez que les
+    //      appels de fonction réussissent en utilisant la macro IS_ERR().
+    //      N'oubliez pas de leur donner la bonne direction!
     //
     // Vous devez également initialiser le mutex de synchronisation.
 
@@ -193,18 +233,20 @@ static int __init setrclavier_init(void){
 
 
 static void __exit setrclavier_exit(void){
-    int i;
+    // TODO
+    // Déclarez _toutes_ vos variables locales ici (le module est compilé avec un standard générant
+    // un warning si une variable est déclarée après toute ligne de code)
 
     // On arrête le thread de lecture
     kthread_stop(task);
 
     // TODO
     // Écrivez le code permettant de relâcher (libérer) les GPIO
-    // Vous aurez pour cela besoin de la fonction gpio_free
+    // N'oubliez pas également de retirer la table de correspondances avec
+    // gpiod_remove_lookup_table
 
     // On retire correctement les différentes composantes du pilote
     device_destroy(setrClasse, MKDEV(majorNumber, 0));
-    class_unregister(setrClasse);
     class_destroy(setrClasse);
     unregister_chrdev(majorNumber, DEV_NAME);
     printk(KERN_INFO "SETR_CLAVIER : Terminaison du driver\n");
@@ -225,6 +267,9 @@ static int dev_release(struct inode *inodep, struct file *filep){
 }
 
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
+    // TODO
+    // Déclarez _toutes_ vos variables locales ici (le module est compilé avec un standard générant
+    // un warning si une variable est déclarée après toute ligne de code)
 
     // TODO
     // Implémentez cette fonction de lecture
@@ -248,5 +293,5 @@ module_exit(setrclavier_exit);
 // Description du module
 MODULE_LICENSE("GPL");            // Licence : laissez "GPL"
 MODULE_AUTHOR("Vous!");           // Vos noms
-MODULE_DESCRIPTION("Lecteur de clavier externe");  // Description du module
-MODULE_VERSION("0.5");            // Numéro de version
+MODULE_DESCRIPTION("Lecteur de clavier externe par polling");  // Description du module
+MODULE_VERSION("2.0");            // Numéro de version
