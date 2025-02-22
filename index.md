@@ -16,9 +16,9 @@ Ce travail pratique vise les objectifs suivants :
 
 ## 2. Préparation et outils nécessaires (matériel)
 
-Ce laboratoire est quelque peu différent des précédents, puisque vous devrez utiliser du matériel supplémentaire, en l'occurrence un petit clavier externe à 12 ou 16 touches. Pour ceux qui n'en aurait pas en leur possession, vous pouvez vous procurer le clavier au magasin de département de génie électrique et de génie informatique. Pensez aussi à avoir le filage (ex. jumpers) pour faire la connexion aux RPi.
+Ce laboratoire est quelque peu différent des précédents, puisque vous devrez utiliser du matériel supplémentaire, en l'occurrence un petit clavier externe à 12 ou 16 touches. Pour ceux qui n'en aurait pas en leur possession, vous pouvez vous procurer le clavier au magasin du département de génie électrique et de génie informatique.
 
-> Note : selon les arrivages, le clavier peut avoir soit trois, soit quatre colonnes. L'un ou l'autre des modèles est valable pour ce laboratoire, mais assurez-vous de configurer correctement votre code lorsque demandé, en particulier dans la macro `NOMBRE_COLONNES` définie au début de chaque fichier.
+> Note : selon les arrivages, le clavier peut avoir trois ou quatre colonnes. L'un ou l'autre des modèles est valable pour ce laboratoire, mais assurez-vous de configurer correctement votre code lorsque demandé, en particulier dans la macro `NOMBRE_COLONNES` définie au début de chaque fichier.
 
 Ce clavier est très rudimentaire et vous devrez concevoir la logique nécessaire à sa lecture. Il possède *sept* fils d'entrée/sortie : 4 connexions pour les lignes (terminaisons noires) et 3 ou 4 pour les colonnes (terminaisons blanches). Ces sorties seront connectées aux *GPIO* (*General Purpose Input-Output*) de votre Raspberry Pi Zero W. Ce dernier possède 40 points (pins) de connexion, agencés selon le schéma suivant (source : [element14](https://www.element14.com/community/docs/DOC-73950/l/raspberry-pi-3-model-b-gpio-40-pin-block-pinout)) :
 
@@ -93,9 +93,9 @@ La plupart des modules noyau s'interfacent avec le reste du système en utilisan
 
 ### 4.4. Écriture d'un module : 3) Accès aux GPIO
 
-L'accès aux GPIO peut être un casse-tête sur des systèmes complexes tels que le Raspberry Pi. Heureusement, le noyau Linux fournit une couche d'abstraction pour leur utilisation, dont vous pouvez retrouver [la documentation ici](https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html) et [ici (pour ce qui concerne le _mapping_ des GPIO)](https://www.kernel.org/doc/html/v5.2/driver-api/gpio/board.html#platform-data). Nous allons donc utiliser ces fonctions au lieu d'interagir directement avec le matériel.
+L'accès aux GPIO peut être un casse-tête sur des systèmes complexes tels que le Raspberry Pi. Heureusement, le noyau Linux fournit une couche d'abstraction pour leur utilisation, dont vous pouvez retrouver [la documentation ici](https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html). La référence complète des fonctions disponibles [est accessible ici](https://docs.kernel.org/driver-api/gpio/index.html) Nous allons utiliser ces fonctions au lieu d'interagir directement avec le matériel.
 
-> **Important** : vous **devez** utiliser cette couche d'abstraction nommée "GPIO Descriptor Consumer Interface". Il existe plusieurs façons de le faire (autrement dit, plusieurs fonctions sont équivalentes), mais ces fonctions _doivent_ provenir de cette API et non, par exemple, de l'API "legacy" (avec des noms de fonction commençant par `gpio_*` au lieu de `gpiod_*`).
+> **Important** : vous **devez** utiliser cette couche d'abstraction nommée "GPIO Descriptor Consumer Interface". Toutes les fonctions que vous utilisez et qui sont liées aux GPIO _doivent_ provenir de cette API et non, par exemple, de l'API "legacy". Les *fonctions* de la nouvelle API (correcte) commencent toutes par `gpiod_*`. Celles de l'ancienne API (à ne **pas** utiliser) commencent par `gpio_*`. Les fonctions présentées au sous-module 8.7 des notes de cours sont les bonnes.
 
 ### 4.5. Écriture d'un module : 4) Lecture du clavier par « polling »
 
@@ -119,7 +119,7 @@ Pour implémenter cet algorithme, basez-vous sur le fichier *setr_driver_irq.c*.
 
 Vous aurez remarqué que l'algorithme suggéré n'est pas exempt de problèmes. En particulier, si plusieurs touches sont pressées simultanément, il se peut que notre pilote « manque » des touches, ou voit au contraire des pressions « fantômes », qui n'existent pas réellement. Il existe plusieurs solutions, matérielles ou logicielles, pour régler ce problème, jusqu'à un certain point. Implémentez-en une qui supporte la pression simultanée *d'au moins deux (2) touches* et démontrez son efficacité. Notez bien que vous n'avez évidemment pas le droit de changer de clavier... Pour ceux qui veulent aller plus loin, serait-il possible de gérer la pression simultanée de trois touches?
 
-> Note : le contrôleur GPIO du Raspberry Pi Zero W ne supporte pas le _debouncing_ (comme vous pouvez le constater vous-mêmes en essayant d'utiliser `gpiod_set_debounce`). Par conséquent, certaines variations rapides des touches peuvent faire en sorte de doubler un appui, particulièrement dans la version avec interruptions (qui réagit très rapidement après l'appui d'une touche). Régler ce problème d'origine électronique impliquerait soit d'ajouter du matériel (e.g., condensateurs de découplage, résistantes pull-down, etc.) soit de complexifier grandement votre code. Nous ne pénaliserons donc pas une simple répétition / touche "fantôme" occasionnelle. Par contre, nous pénaliserons des erreurs comme une répétition de plus d'une occurrence ou "éternelle" (une touche qui se répète sans arrêt), un caractère apparaissant alors qu'aucune touche n'est pressée, un caractère n'apparaissant pas alors que sa touche est pressée, ou un caractère fantôme systématique (si _toutes_ les pressions conduisent à une lecture erronée).
+> Note : le contrôleur GPIO du Raspberry Pi Zero W ne supporte pas le _debouncing_ (comme vous pouvez le constater vous-mêmes en essayant d'utiliser `gpiod_set_debounce`). Par conséquent, certaines variations rapides des touches peuvent faire en sorte de doubler un appui, particulièrement dans la version avec interruptions (qui réagit très rapidement après l'appui d'une touche). Régler ce problème d'origine électronique impliquerait soit d'ajouter du matériel (e.g., condensateurs de découplage, résistances pull-down, etc.) soit de complexifier grandement votre code. Nous ne pénaliserons donc pas une simple répétition / touche "fantôme" occasionnelle. Par contre, nous pénaliserons des erreurs comme une répétition de plus d'une occurrence ou "éternelle" (une touche qui se répète sans arrêt), un caractère apparaissant alors qu'aucune touche n'est pressée, un caractère n'apparaissant pas alors que sa touche est pressée, ou une erreur systématique (si _toutes_ les pressions conduisent à une lecture erronée).
 
 
 ### 4.8. Débogage et tests
@@ -185,12 +185,14 @@ Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 po
 
 * (5 pts) Les étudiants sont en mesure d'expliquer l'approche utilisée et de répondre aux questions concernant leur code et la théorie liée au laboratoire.
 
+#### 5.1.4. Utilisation des fonctions correctes pour le contrôle des GPIO
+
+Tel que mentionné à la section 4.4, vous **devez** utiliser l'interface moderne pour l'accès aux GPIO (celle dont les fonctions sont préfixées de gpio**d**). C'est aussi l'interface présentée dans les notes de cours. Utiliser des fonctions de l'ancienne interface (*legacy*) entraînera une pénalité pouvant atteindre 100% de la note du laboratoire (selon l'usage qui en est fait).
 
 ## 6. Ressources et lectures connexes
 
 * [Le dépôt Git contenant les fichiers de base](https://github.com/setr-ulaval/labo4-h25)
 * [Linux Device Drivers, Third Edition](https://lwn.net/Kernel/LDD3/), un excellent guide (bien que pas totalement à jour) sur l'écriture de pilotes pour le noyau Linux
-* [Documentation des fonctions d'accès aux GPIO](https://www.kernel.org/doc/Documentation/gpio/gpio-legacy.txt) dans le noyau Linux
-* [Un excellent guide sur l'écriture d'un pilote pour GPIO sous Linux](http://derekmolloy.ie/writing-a-linux-kernel-module-part-1-introduction/), duquel est en partie inspiré ce laboratoire
+* [Référence](https://docs.kernel.org/driver-api/gpio/index.html) et [Documentation des fonctions d'accès aux GPIO](https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html) dans le noyau Linux
 
 
