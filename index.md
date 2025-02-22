@@ -185,10 +185,6 @@ Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 po
 
 * (5 pts) Les étudiants sont en mesure d'expliquer l'approche utilisée et de répondre aux questions concernant leur code et la théorie liée au laboratoire.
 
-#### 5.1.4. Utilisation des fonctions correctes pour le contrôle des GPIO
-
-Tel que mentionné à la section 4.4, vous **devez** utiliser l'interface moderne pour l'accès aux GPIO (celle dont les fonctions sont préfixées de gpio**d**). C'est aussi l'interface présentée dans les notes de cours. Utiliser des fonctions de l'ancienne interface (*legacy*) entraînera une pénalité pouvant atteindre 100% de la note du laboratoire (selon l'usage qui en est fait).
-
 ## 6. Ressources et lectures connexes
 
 * [Le dépôt Git contenant les fichiers de base](https://github.com/setr-ulaval/labo4-h25)
