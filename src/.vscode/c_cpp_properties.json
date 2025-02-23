@@ -4,21 +4,28 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceRoot}",
-                "${env.HOME}/arm-cross-comp-env/arm-raspbian-linux-gnueabi/arm-raspbian-linux-gnueabi/sysroot/lib/modules/4.19.50-rt22/source/include",
-                "${env.HOME}/arm-cross-comp-env/arm-raspbian-linux-gnueabi/arm-raspbian-linux-gnueabi/sysroot/lib/modules/4.19.50-rt22/source/arch/arm/include",
-                "${env.HOME}/arm-cross-comp-env/arm-raspbian-linux-gnueabi/arm-raspbian-linux-gnueabi/sysroot/lib/modules/4.19.50-rt22/source/arch/arm/include/generated/",
-                "${env.HOME}/arm-cross-comp-env/arm-raspbian-linux-gnueabi/arm-raspbian-linux-gnueabi/sysroot/usr/lib/gcc/arm-linux-gnueabihf/8/include/"
+                "${env.HOME}/rPi/linux-rpi-6.1.54-rt15/include",
+                "${env.HOME}/rPi/linux-rpi-6.1.54-rt15/arch/arm/include",
+                "${env.HOME}/rPi/linux-rpi-6.1.54-rt15.compiled/linux-rpi-6.1.54-rt15/arch/arm/include/generated/",
+                "${env.HOME}/arm-cross-comp-env/arm-raspbian-linux-gnueabi/arm-raspbian-linux-gnueabi/sysroot/usr/lib/gcc/arm-linux-gnueabihf/12/include/",
+                "${env.HOME}/rPi/linux-rpi-6.1.54-rt15.compiled/linux-rpi-6.1.54-rt15/include"
             ],
-            "defines": ["__ARM_PCS_VFP"],
-            "intelliSenseMode": "clang-x64",
+            "defines": [
+                "__ARM_PCS_VFP", 
+                "__KERNEL__", "MODULE"
+            ],
+            "intelliSenseMode": "linux-gcc-arm",
             "browse": {
                 "path": [
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
-            }
+            },
+            "compilerPath": "${env.HOME}/arm-cross-comp-env/arm-raspbian-linux-gnueabi/bin/arm-raspbian-linux-gnueabi-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17"
         }
     ],
-    "version": 3
+    "version": 4
 }
