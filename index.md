@@ -43,7 +43,6 @@ La compilation et l'édition de liens d'un module noyau constituent probablement
 ### 3.1. Téléchargement du noyau
 Compiler un module noyau requiert d'avoir une version compilée du noyau sur votre machine hôte. Vous pouvez télécharger l'archive [suivante](https://wcours.gel.ulaval.ca/GIF3004/setrh25/linux-rpi-6.1.54-rt15.compiled.tar.gz) dans le dossier `$HOME/rPi` de la VM ou de votre ordinateur. Pour que le laboratoire fonctionne, le chemin suivant doit contenir les fichiers : `$HOME/rPi/linux-rpi-6.1.54-rt15.compiled/linux-rpi-6.1.54-rt15`. Si vous souhaitez installer le noyau dans un autre dossier, assurez vous de modifier la ligne 5 du `Makefile` du projet avec votre propre chemin.
 
-> Note : il se peut que la colorisation syntaxique indique des erreurs dans la directive _include_ de linux/kthread.h. Ce n'est pas un problème tant que vous pouvez tout de même compiler vos programmes sans erreur ni avertissement.
 
 ### 3.2. Procédure de compilation
 
