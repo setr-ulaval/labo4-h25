@@ -11,7 +11,6 @@
 * Prenez le temps de lire attentivement les notes de cours et les commentaires
 * contenus dans ce fichier, ils contiennent des informations cruciales.
 *
-* Inspiré de http://derekmolloy.ie/writing-a-linux-kernel-module-part-1-introduction/
 */
 
 // Inclusion des en-têtes nécessaires
