@@ -36,12 +36,12 @@ Comme vous pouvez le constater, toutes les broches ne sont pas équivalentes. Ce
 
 ## 3. Préparation et outils nécessaires (logiciels)
 
-Les ébauches de code sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h25](https://github.com/setr-ulaval/labo4-h25). Vous y retrouvez, comme pour les autres laboratoires, un projet VScode et deux fichiers source correspondant aux deux pilotes que vous devrez implémenter. Notez que la configuration qui vous est fournie assume que vous avez bâti votre environnement de compilation croisée en suivant à la lettre les instructions du laboratoire 1. Si vous obtenez des erreurs liées à des en-têtes manquants, vérifiez que vous avez bien utilisé les sources du noyau correspondant à la version présente sur le Raspberry Pi. Pour cette même raison, vous ne devez *pas* avoir mis à jour le noyau installé sur votre Raspberry Pi.
+Les ébauches de code sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h25](https://github.com/setr-ulaval/labo4-h25). Vous y retrouvez, comme pour les autres laboratoires, un projet VScode et deux fichiers source correspondant aux deux pilotes que vous devrez implémenter. Notez que la configuration qui vous est fournie assume que vous avez bâti votre environnement de compilation croisée en suivant à la lettre les instructions du laboratoire 1. Pour cette même raison, vous ne devez *pas* avoir mis à jour le noyau installé sur votre Raspberry Pi.
 
-La compilation et l'édition de liens d'un module noyau constituent probablement une des tâches les plus délicates pour un environnement de compilation croisée. Pour cette raison, le noyau Linux possède son propre système de compilation, basé sur *Make*; nous n'utiliserons donc pas CMake dans le cadre de ce laboratoire.
+La compilation et l'édition de liens d'un module noyau constituent probablement une des tâches les plus délicates pour un environnement de compilation croisée. Le noyau Linux possède son propre système de compilation, basé sur *Make*; nous n'utiliserons donc pas CMake dans le cadre de ce laboratoire.
 
 ### 3.1. Téléchargement du noyau
-Compiler un module noyau requiert d'avoir une version compilée du noyau sur votre machine hôte. Vous pouvez télécharger l'archive [suivante](https://wcours.gel.ulaval.ca/GIF3004/setrh25/linux-rpi-6.1.54-rt15.compiled.tar.gz) dans le dossier `$HOME/rPi` de la VM ou de votre ordinateur. Pour que le laboratoire fonctionne, le chemin suivant doit contenir les fichiers : `$HOME/rPi/linux-rpi-6.1.54-rt15.compiled/linux-rpi-6.1.54-rt15`. Si vous souhaitez installer le noyau dans un autre dossier, assurez vous de modifier la ligne 5 du `Makefile` du projet avec votre propre chemin.
+Compiler un module noyau requiert d'avoir une version compilée du noyau sur votre machine hôte. Vous devez télécharger l'archive [suivante](https://wcours.gel.ulaval.ca/GIF3004/setrh25/linux-rpi-6.1.54-rt15.compiled.tar.gz) dans le dossier `$HOME/rPi` de la VM ou de votre ordinateur. Pour que le laboratoire fonctionne, le chemin suivant doit contenir les fichiers : `$HOME/rPi/linux-rpi-6.1.54-rt15.compiled/linux-rpi-6.1.54-rt15` (où `$HOME` est par exemple `/home/setr` dans le cas de la machine virtuelle Fedora fournie). Si vous souhaitez installer le noyau dans un autre dossier, assurez vous de modifier la ligne 5 du `Makefile` du projet avec votre propre chemin.
 
 
 ### 3.2. Procédure de compilation
@@ -66,6 +66,8 @@ Notez que comme l'exécution d'un module noyau se fait logiquement en mode privi
 ## 4. Énoncé
 
 Le code de base et les fichiers *Makefile* nécessaires à la compilation des modules sont disponibles sur le dépôt Git suivant : [https://github.com/setr-ulaval/labo4-h25](https://github.com/setr-ulaval/labo4-h25).
+
+> Note : comme pour les autres laboratoires, le code de base fourni ne **compile pas** et génère plusieurs avertissements (la plupart concernant des variables globales inutilisées). Ceci est normal, vous devez remplir les différents *TODO* indiqués dans les fichiers afin de permettre la compilation.
 
 ### 4.1. Méthode de lecture du clavier
 
@@ -94,13 +96,13 @@ La plupart des modules noyau s'interfacent avec le reste du système en utilisan
 
 L'accès aux GPIO peut être un casse-tête sur des systèmes complexes tels que le Raspberry Pi. Heureusement, le noyau Linux fournit une couche d'abstraction pour leur utilisation, dont vous pouvez retrouver [la documentation ici](https://www.kernel.org/doc/html/v6.1/driver-api/gpio/consumer.html). La référence complète des fonctions disponibles [est accessible ici](https://docs.kernel.org/driver-api/gpio/index.html) Nous allons utiliser ces fonctions au lieu d'interagir directement avec le matériel.
 
-> **Important** : vous **devez** utiliser cette couche d'abstraction nommée "GPIO Descriptor Consumer Interface". Toutes les fonctions que vous utilisez et qui sont liées aux GPIO _doivent_ provenir de cette API et non, par exemple, de l'API "legacy". Les *fonctions* de la nouvelle API (correcte) commencent toutes par `gpiod_*`. Celles de l'ancienne API (à ne **pas** utiliser) commencent par `gpio_*`. Les fonctions présentées au sous-module 8.7 des notes de cours sont les bonnes.
+> **Important** : vous **devez** utiliser cette couche d'abstraction nommée "GPIO Descriptor Consumer Interface". Toutes les fonctions que vous utilisez et qui sont liées aux GPIO _doivent_ provenir de cette API et non, par exemple, de l'API "legacy". Les **fonctions** (pas forcément les structures de données) de la nouvelle API (correcte) commencent toutes par `gpiod_*`. Les fonctions de l'ancienne API (à ne **pas** utiliser) commencent par `gpio_*`. Les fonctions présentées au sous-module 8.7 des notes de cours sont les bonnes.
 
 ### 4.5. Écriture d'un module : 4) Lecture du clavier par « polling »
 
-Comme première tâche, vous devrez compléter et tester le fichier *setr_driver_polling.c*. Ce pilote fonctionne sur le principe du *polling* : un thread noyau est lancé et balaye constamment les lignes du clavier afin de déterminer si une nouvelle touche a été enfoncée. À la fin de chaque balayage, il se met en pause pour une courte période de temps afin d'éviter de monopoliser un processeur.
+Comme première tâche, vous devrez compléter et tester le fichier *setr_driver_polling.c*. Ce pilote fonctionne sur le principe du *polling* : un thread noyau est lancé et balaie constamment les lignes du clavier afin de déterminer si une nouvelle touche a été enfoncée. À la fin de chaque balayage, il se met en pause pour une courte période de temps afin d'éviter de monopoliser un processeur.
 
-Complétez ce fichier et vérifiez son bon fonctionnement. En particulier, vérifiez si 1) votre système prend en compte l'appui d'une touche et 2) ne la prend en compte qu'une seule fois lorsqu'elle n'est pas relâchée. Prenez le temps de lire *tous* les commentaires contenus dans le fichier, ils contiennent des informations importantes qui pourront vous être très utile. Observez également comment la charge processeur varie selon la durée de temps de repos que le thread requiert après chaque itération. Que se passe-t-il si on supprime carrément cette pause?
+Complétez ce fichier et vérifiez son bon fonctionnement. En particulier, vérifiez si 1) votre système prend en compte l'appui d'une touche et 2) ne la prend en compte qu'une seule fois lorsqu'elle n'est pas relâchée. Prenez le temps de lire *tous* les commentaires contenus dans le fichier, ils contiennent des informations importantes qui pourront vous être très utiles. Observez également comment la charge processeur varie selon la durée de temps de repos que le thread requiert après chaque itération. Que se passe-t-il si on supprime carrément cette pause?
 
 ### 4.6. Écriture d'un module : 5) Lecture du clavier par interruption
 
@@ -110,7 +112,7 @@ Le système de lecture conçu jusqu'à maintenant est relativement peu efficace,
 2. Des *interruptions* sont liées à un changement de valeur sur les colonnes. Cette mise sous tension sera donc remarquée par le Raspberry Pi qui appellera notre fonction liée à l'interruption.
 3. À ce moment, nous savons seulement qu'une touche a été pressée, mais nous ne savons pas *laquelle*. Pour la retrouver, il suffit d'utiliser la même approche que celle présentée plus haut.
 
-Comme on peut le constater, l'algorithme de lecture reste le même. La différence majeure est plutôt que, cette fois, le système n'a pas besoin *d'activement* vérifier la pression d'une touche, mais compte sur une interruption pour le lui signaler, ce qui est bien plus efficace.
+Comme on peut le constater, l'algorithme de lecture reste le même. La différence majeure est plutôt que, cette fois, le système n'a pas besoin *d'activement* vérifier la pression d'une touche, mais compte sur une interruption pour le lui signaler, ce qui est bien plus efficace. En effet, le balayage ne se fait *qu'une fois*, à la demande, lorsqu'une pression de touche est détectée, au lieu de se faire systématiquement.
 
 Pour implémenter cet algorithme, basez-vous sur le fichier *setr_driver_irq.c*. Ce pilote est très similaire au précédent, mais associe aussi des interruptions aux broches de lecture. Par ailleurs, il n'y a plus de *thread* noyau : à sa place, un *tasklet* doit être appelé après chaque interruption, interruption dont la durée doit être la plus courte possible. Ce tasklet doit effectuer la tâche qui était précédemment dévolue au thread noyau, à savoir balayer les lignes pour déterminer quelle touche a été pressée. Comme pour la tâche précédente, voyez le fichier en question et en particulier ses commentaires pour plus de détails.
 
@@ -118,12 +120,14 @@ Pour implémenter cet algorithme, basez-vous sur le fichier *setr_driver_irq.c*.
 
 Vous aurez remarqué que l'algorithme suggéré n'est pas exempt de problèmes. En particulier, si plusieurs touches sont pressées simultanément, il se peut que notre pilote « manque » des touches, ou voit au contraire des pressions « fantômes », qui n'existent pas réellement. Il existe plusieurs solutions, matérielles ou logicielles, pour régler ce problème, jusqu'à un certain point. Implémentez-en une qui supporte la pression simultanée *d'au moins deux (2) touches* et démontrez son efficacité. Notez bien que vous n'avez évidemment pas le droit de changer de clavier... Pour ceux qui veulent aller plus loin, serait-il possible de gérer la pression simultanée de trois touches?
 
-> Note : le contrôleur GPIO du Raspberry Pi Zero W ne supporte pas le _debouncing_ (comme vous pouvez le constater vous-mêmes en essayant d'utiliser `gpiod_set_debounce`). Par conséquent, certaines variations rapides des touches peuvent faire en sorte de doubler un appui, particulièrement dans la version avec interruptions (qui réagit très rapidement après l'appui d'une touche). Régler ce problème d'origine électronique impliquerait soit d'ajouter du matériel (e.g., condensateurs de découplage, résistances pull-down, etc.) soit de complexifier grandement votre code. Nous ne pénaliserons donc pas une simple répétition / touche "fantôme" occasionnelle. Par contre, nous pénaliserons des erreurs comme une répétition de plus d'une occurrence ou "éternelle" (une touche qui se répète sans arrêt), un caractère apparaissant alors qu'aucune touche n'est pressée, un caractère n'apparaissant pas alors que sa touche est pressée, ou une erreur systématique (si _toutes_ les pressions conduisent à une lecture erronée).
+> Note : le contrôleur GPIO du Raspberry Pi Zero W ne supporte pas le _debouncing_ (comme vous pouvez le constater vous-mêmes en essayant d'utiliser `gpiod_set_debounce`). Par conséquent, certaines variations rapides des touches peuvent faire en sorte de doubler un appui, particulièrement dans la version avec interruptions (qui réagit très rapidement après l'appui d'une touche). Régler ce problème d'origine électronique impliquerait soit d'ajouter du matériel (e.g., condensateurs de découplage, résistances pull-down, etc.) soit de complexifier grandement votre code. Nous ne pénaliserons donc pas une simple répétition / touche "fantôme" occasionnelle. Par contre, nous pénaliserons des erreurs comme une répétition de plus d'une occurrence ou "éternelle" (une touche qui se répète sans arrêt), un caractère apparaissant alors qu'aucune touche n'est pressée, un caractère n'apparaissant pas alors que sa touche est pressée, ou une erreur systématique (si _tous_ les essais conduisent à une lecture erronée).
 
 
 ### 4.8. Débogage et tests
 
 Il est peu probable que vos modules fonctionnent parfaitement du premier coup, et ce même s'ils compilent sans erreur. Malheureusement, il existe peu de procédures de débogage simples dans le cadre d'un développement en espace noyau. Le plus simple reste encore d'utiliser des *printk* à intervalle régulier : vous pourrez ensuite les visualiser en temps réel en utilisant la commande *dmesg -Hw*. Faites attention de ne pas *trop* imprimer de messages de débogage cependant; saturer le noyau de chaînes de caractères risque fort de poser problème!
+
+> Information : vous pouvez "nettoyer" le contenu de `dmesg` en utilisant la commande `sudo dmesg -c`. Cette commande affichera son contenu, mais fera également en sorte de l'effacer, de sorte que les prochains appels n'afficheront que les **nouveaux** événements.
 
 Il peut arriver que votre module soit entré dans un état invalide et qu'il ne soit plus possible de le retirer, même en utilisant *rmmod* ou *modprobe -r*. Dans ces situations, la seule méthode permettant de revenir à un environnement correct est malheureusement de redémarrer le Raspberry Pi. Il en va de même pour les corruptions mémoire que votre module pourrait causer : n'oubliez pas qu'en espace noyau, les erreurs de segmentation n'existent pas et que ce n'est **pas** une bonne nouvelle pour vous! Écrire à des emplacements mémoires qui ne vous appartiennent pas peut résulter en toutes sortes de conséquences sur le reste du système...
 
@@ -174,7 +178,7 @@ Le barême d'évaluation détaillé sera le suivant (laboratoire noté sur 20 po
 
 > **Attention** : un programme ne compilant pas obtient automatiquement une note de **zéro** pour cette section.
 
-* (1 pts) Le module noyau se charge sans erreur et s'initialise correctement.
+* (1 pts) Le module noyau se charge sans erreur, s'initialise correctement et est en mesure de quitter correctement en libérant les ressources acquises.
 * (2 pts) Le fichier /dev/setrclavier est bien créé et fonctionne comme demandé.
 * (3 pts) Pour le premier module, le clavier est lu par *polling* correctement (les valeurs retournées sont les bonnes, dans le bon ordre).
 * (3 pts) Pour le second module, les interruptions sont bien gérées et le clavier est lu sans nécessiter un *polling* continuel lorsqu'aucune touche n'est enfoncée.
